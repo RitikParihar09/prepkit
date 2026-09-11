@@ -2,9 +2,10 @@
 
 import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
-import { ArrowRight, Play, FileText, Target, Calendar, Zap, CheckCircle2, Check, ArrowUpRight } from 'lucide-react';
+import { ArrowRight, Play, FileText, Target, Calendar, Zap, CheckCircle2, Check, ArrowUpRight, Clock, BarChart3 } from 'lucide-react';
 import { FaqSection } from '@/components/FaqSection';
 import { CtaBanner } from '@/components/CtaBanner';
+import { HowItWorksModal } from '@/components/HowItWorksModal';
 
 const HERO_ANIMATED_STEPS = [
   'Analyzing your job post...',
@@ -16,6 +17,8 @@ const HERO_ANIMATED_STEPS = [
 ];
 
 const HERO_SAMPLE_ROLES = [
+  'Software Engineer Intern',
+  'AI Engineer',
   'Senior Software Engineer',
   'Lead Product Manager',
   'Full Stack Developer',
@@ -28,26 +31,103 @@ export default function LandingPage() {
   const [activeHeroStepIndex, setActiveHeroStepIndex] = useState(0);
   const [currentRoleIndex, setCurrentRoleIndex] = useState(0);
   const [isAnalysisDone, setIsAnalysisDone] = useState(false);
+  const [isFlyingToCard, setIsFlyingToCard] = useState(false);
+  const [isEmergingFromStep, setIsEmergingFromStep] = useState(false);
+  const [isHowItWorksOpen, setIsHowItWorksOpen] = useState(false);
+
+  // Check URL query parameters or hash on mount and popstate (browser back/forward)
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+
+    const checkUrlForModal = () => {
+      const searchParams = new URLSearchParams(window.location.search);
+      const modalParam = searchParams.get('modal') || searchParams.get('how-it-works') || searchParams.get('howitworks');
+      const hasHash = window.location.hash === '#how-it-works' || window.location.hash === '#howitworks';
+
+      if (modalParam === 'how-it-works' || modalParam === 'true' || modalParam === '1' || hasHash) {
+        setIsHowItWorksOpen(true);
+      }
+    };
+
+    checkUrlForModal();
+
+    window.addEventListener('popstate', checkUrlForModal);
+    return () => window.removeEventListener('popstate', checkUrlForModal);
+  }, []);
+
+  const openHowItWorks = () => {
+    setIsHowItWorksOpen(true);
+    if (typeof window !== 'undefined') {
+      const url = new URL(window.location.href);
+      url.searchParams.set('modal', 'how-it-works');
+      window.history.pushState({}, '', url.toString());
+    }
+  };
+
+  const closeHowItWorks = () => {
+    setIsHowItWorksOpen(false);
+    if (typeof window !== 'undefined') {
+      const url = new URL(window.location.href);
+      url.searchParams.delete('modal');
+      url.searchParams.delete('how-it-works');
+      url.searchParams.delete('howitworks');
+      const newSearch = url.searchParams.toString();
+      const newPath = url.pathname + (newSearch ? `?${newSearch}` : '');
+      window.history.pushState({}, '', newPath);
+    }
+  };
 
   useEffect(() => {
-    const interval = setInterval(() => {
-      setActiveHeroStepIndex(prev => {
-        if (prev >= HERO_ANIMATED_STEPS.length - 1) {
-          // Trigger Analysis Complete state
-          setIsAnalysisDone(true);
-          // After holding complete state for 3 seconds, reset to step 0 & advance role
-          setTimeout(() => {
-            setIsAnalysisDone(false);
-            setActiveHeroStepIndex(0);
-            setCurrentRoleIndex(rPrev => (rPrev + 1) % HERO_SAMPLE_ROLES.length);
-          }, 3000);
-          return prev;
-        }
-        return prev + 1;
-      });
-    }, 3200); // 3.2 seconds per step
+    let isCancelled = false;
 
-    return () => clearInterval(interval);
+    const runSequence = () => {
+      // Step 1: Advance through steps 0 to 5
+      for (let i = 0; i < HERO_ANIMATED_STEPS.length; i++) {
+        setTimeout(() => {
+          if (isCancelled) return;
+          setActiveHeroStepIndex(i);
+
+          // Step 2: On last step (step 5), trigger analysis done
+          if (i === HERO_ANIMATED_STEPS.length - 1) {
+            setIsAnalysisDone(true);
+
+            // Phase 1: Show tick mark for 600ms, then fly whole div down into role card
+            setTimeout(() => {
+              if (isCancelled) return;
+              setIsFlyingToCard(true);
+            }, 600);
+
+            // Phase 2: Hold inside card for 2.5s pause, then reset step & change role
+            setTimeout(() => {
+              if (isCancelled) return;
+              setIsFlyingToCard(false);
+              setIsAnalysisDone(false);
+              setActiveHeroStepIndex(0);
+              setCurrentRoleIndex(rPrev => (rPrev + 1) % HERO_SAMPLE_ROLES.length);
+
+              // Phase 3: Emerge new document div back out from step list
+              setIsEmergingFromStep(true);
+              setTimeout(() => {
+                if (isCancelled) return;
+                setIsEmergingFromStep(false);
+              }, 600);
+
+              // Loop next round after sequence finishes
+              setTimeout(() => {
+                if (!isCancelled) runSequence();
+              }, 1000);
+
+            }, 3100); // 600ms tick + 2500ms pause inside card
+          }
+        }, i * 1400);
+      }
+    };
+
+    runSequence();
+
+    return () => {
+      isCancelled = true;
+    };
   }, []);
 
   return (
@@ -90,37 +170,61 @@ export default function LandingPage() {
                 <ArrowRight className="w-4 h-4" />
               </Link>
 
-              <Link
-                href="/dashboard"
-                className="bg-[#FFFFFF] hover:bg-[#F0F0EC] text-[#0A0A0A] border border-[#CCCCCC] text-sm font-semibold py-3.5 px-6 rounded-lg transition-all flex items-center justify-center gap-2"
+              <button
+                onClick={openHowItWorks}
+                className="bg-[#FFFFFF] hover:bg-[#F0F0EC] text-[#0A0A0A] border border-[#CCCCCC] text-sm font-semibold py-3.5 px-6 rounded-lg transition-all flex items-center justify-center gap-2 cursor-pointer shadow-2xs hover:shadow-xs"
               >
                 <Play className="w-3.5 h-3.5 fill-current" />
                 <span>See how it works</span>
-              </Link>
+              </button>
             </div>
 
-            {/* Startup Product Feature Highlights Row */}
-            <div className="pt-8 border-t border-[#E8E8E2] grid grid-cols-3 gap-6 max-w-lg font-sans">
-              <div className="border-r border-[#E8E8E2] pr-4">
-                <div className="text-xl sm:text-2xl font-extrabold text-[#0A0A0A]">100%</div>
-                <div className="text-xs text-[#777777] mt-0.5 font-medium">Autonomous Research</div>
+            {/* Startup Product Feature Highlights Row (Exact Reference Match) */}
+            <div className="pt-8 border-t border-[#E8E8E2] grid grid-cols-3 gap-4 sm:gap-6 max-w-xl font-sans">
+              
+              {/* Stat 1: 100% Autonomous Research */}
+              <div className="border-r border-[#E8E8E2] pr-2 sm:pr-4 flex items-center gap-2.5 sm:gap-3">
+                <div className="shrink-0 flex items-center justify-center">
+                  <Zap className="w-6 h-6 sm:w-7 sm:h-7 text-[#0A0A0A] fill-[#E8FF00] stroke-[#0A0A0A] stroke-[2]" />
+                </div>
+                <div>
+                  <div className="text-lg sm:text-2xl font-extrabold text-[#0A0A0A] leading-tight">100%</div>
+                  <div className="text-[11px] sm:text-xs text-[#777777] font-medium leading-tight mt-0.5">Autonomous Research</div>
+                </div>
               </div>
-              <div className="border-r border-[#E8E8E2] pr-4">
-                <div className="text-xl sm:text-2xl font-extrabold text-[#0A0A0A]">&lt; 3 min</div>
-                <div className="text-xs text-[#777777] mt-0.5 font-medium">Kit Generation</div>
+
+              {/* Stat 2: < 3 min Kit Generation */}
+              <div className="border-r border-[#E8E8E2] pr-2 sm:pr-4 flex items-center gap-2.5 sm:gap-3">
+                <div className="shrink-0 flex items-center justify-center">
+                  <div className="w-6 h-6 sm:w-7 sm:h-7 rounded-full bg-[#E8FF00] border-2 border-[#0A0A0A] flex items-center justify-center">
+                    <Clock className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-[#0A0A0A] stroke-[2.5]" />
+                  </div>
+                </div>
+                <div>
+                  <div className="text-lg sm:text-2xl font-extrabold text-[#0A0A0A] leading-tight">&lt; 3 min</div>
+                  <div className="text-[11px] sm:text-xs text-[#777777] font-medium leading-tight mt-0.5">Kit Generation</div>
+                </div>
               </div>
-              <div>
-                <div className="text-xl sm:text-2xl font-extrabold text-[#0A0A0A]">10x</div>
-                <div className="text-xs text-[#777777] mt-0.5 font-medium">More Confident</div>
+
+              {/* Stat 3: 10x More Confident */}
+              <div className="flex items-center gap-2.5 sm:gap-3">
+                <div className="shrink-0 flex items-center justify-center">
+                  <BarChart3 className="w-6 h-6 sm:w-7 sm:h-7 text-[#0A0A0A] fill-[#E8FF00] stroke-[2]" />
+                </div>
+                <div>
+                  <div className="text-lg sm:text-2xl font-extrabold text-[#0A0A0A] leading-tight">10x</div>
+                  <div className="text-[11px] sm:text-xs text-[#777777] font-medium leading-tight mt-0.5">More Confident</div>
+                </div>
               </div>
+
             </div>
           </div>
 
           {/* Right Hero Column - Interactive Technical Visual (Exact Reference Match) */}
-          <div className="lg:col-span-5 relative bg-[#FBFBF8] bg-tech-grid p-6 sm:p-10 border border-[#E8E8E2] rounded-2xl min-h-[520px] flex flex-col justify-between overflow-hidden select-none">
+          <div className="lg:col-span-5 relative bg-[#FBFBF8] bg-tech-grid p-6 sm:p-10 border border-[#E8E8E2] rounded-2xl min-h-[520px] flex flex-col justify-between select-none">
             
             {/* Dark Textured / Grainy Background Art Blocks */}
-            <div className="absolute inset-0 pointer-events-none opacity-20 overflow-hidden">
+            <div className="absolute inset-0 pointer-events-none opacity-20 overflow-hidden rounded-2xl">
               <div className="absolute top-12 left-10 w-64 h-64 bg-black rounded-lg mix-blend-multiply filter blur-[1px] bg-[radial-gradient(#000_1px,transparent_1px)] [background-size:4px_4px]"></div>
               <div className="absolute bottom-6 right-8 w-72 h-72 bg-black rounded-lg mix-blend-multiply filter blur-[1px] bg-[radial-gradient(#000_1px,transparent_1px)] [background-size:3px_3px]"></div>
             </div>
@@ -141,8 +245,8 @@ export default function LandingPage() {
               {/* Row 1: Floating Dark Card & Lime Selection Box */}
               <div className="relative flex items-start justify-between gap-4 max-w-lg mx-auto">
                 
-                {/* Dark Floating AI Execution Panel */}
-                <div className="bg-[#18181A] text-white p-5 rounded-2xl border border-[#2D2D30] shadow-2xl w-full max-w-[280px] sm:max-w-[310px] relative z-20">
+                {/* Dark Floating AI Execution Panel (Overlapping Left Border cleanly) */}
+                <div className="bg-[#18181A] text-white p-5 rounded-2xl border border-[#2D2D30] shadow-2xl w-full max-w-[280px] sm:max-w-[310px] relative z-20 -left-3 sm:-left-6">
                   <div className="relative pl-6 space-y-3.5 font-sans text-xs">
                     
                     {/* Vertical Connector Line */}
@@ -189,18 +293,36 @@ export default function LandingPage() {
                   </div>
                 </div>
 
-                {/* Lime Crop Selection Box (Top Right Overlay - Reduced Proportioned Size) */}
+                {/* Lime Crop Selection Box (Top Right Overlay - Whole Div Flies Down Into Role Card) */}
                 <div className="relative mt-8 sm:mt-12 right-2 sm:right-4 z-10 shrink-0">
-                  <div className="relative w-22 h-22 sm:w-26 sm:h-26 bg-[#E8FF00] rounded-2xl flex items-center justify-center shadow-xl transition-transform hover:scale-105">
+                  <div className={`relative w-22 h-22 sm:w-26 sm:h-26 transition-all ${
+                    isFlyingToCard ? 'animate-fly-down' : isEmergingFromStep ? 'animate-pop-out-from-step' : ''
+                  }`}>
                     
-                    {/* 4 Black Selection Crop Handles */}
-                    <span className="absolute -top-1 -left-1 w-2.5 h-2.5 bg-black"></span>
-                    <span className="absolute -top-1 -right-1 w-2.5 h-2.5 bg-black"></span>
-                    <span className="absolute -bottom-1 -left-1 w-2.5 h-2.5 bg-black"></span>
-                    <span className="absolute -bottom-1 -right-1 w-2.5 h-2.5 bg-black"></span>
+                    {/* 4 Black Corner Square Handles */}
+                    <span className="absolute -top-1.5 -left-1.5 w-3.5 h-3.5 bg-black rounded-[2px] z-30 shadow-xs"></span>
+                    <span className="absolute -top-1.5 -right-1.5 w-3.5 h-3.5 bg-black rounded-[2px] z-30 shadow-xs"></span>
+                    <span className="absolute -bottom-1.5 -left-1.5 w-3.5 h-3.5 bg-black rounded-[2px] z-30 shadow-xs"></span>
+                    <span className="absolute -bottom-1.5 -right-1.5 w-3.5 h-3.5 bg-black rounded-[2px] z-30 shadow-xs"></span>
 
-                    {/* Direct Proportioned File Icon */}
-                    <FileText className="w-8 h-8 sm:w-10 sm:h-10 text-[#0A0A0A] stroke-[2]" />
+                    {/* Main Lime Rounded Box */}
+                    <div className="w-full h-full bg-[#E8FF00] rounded-2xl flex items-center justify-center shadow-xl transition-transform hover:scale-105 overflow-hidden relative">
+                      
+                      {/* Continuous Laser Scanning Beam */}
+                      <div className="absolute left-0 right-0 h-1 bg-black/80 shadow-[0_0_8px_rgba(0,0,0,0.6)] animate-laser-scan pointer-events-none z-0"></div>
+                      
+                      {/* Faint Grid Scanner Overlay Effect */}
+                      <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_center,rgba(0,0,0,0.08)_0%,transparent_70%)] pointer-events-none"></div>
+
+                      {/* File Icon or Tick Checkmark */}
+                      {isAnalysisDone ? (
+                        <div className="relative z-10 animate-tick-pop flex items-center justify-center bg-black text-[#E8FF00] w-10 h-10 sm:w-12 sm:h-12 rounded-xl shadow-md">
+                          <Check className="w-6 h-6 sm:w-7 sm:h-7 stroke-[3]" />
+                        </div>
+                      ) : (
+                        <FileText className="relative z-10 w-8 h-8 sm:w-10 sm:h-10 text-[#0A0A0A] stroke-[2] transition-transform duration-300 hover:scale-110" />
+                      )}
+                    </div>
                   </div>
                 </div>
 
@@ -208,7 +330,9 @@ export default function LandingPage() {
 
               {/* Row 2: Overlapping Role Card (Slight overlap with dark 6-step card) */}
               <div className="relative -mt-3 sm:-mt-4 z-30 max-w-[340px] sm:max-w-[380px] mx-auto">
-                <div className="bg-white p-4 sm:p-5 rounded-2xl border border-[#E2E2DC] shadow-xl flex items-center justify-between gap-4">
+                <div className={`bg-white p-4 sm:p-5 rounded-2xl border border-[#E2E2DC] shadow-xl flex items-center justify-between gap-4 transition-all duration-300 ${
+                  isFlyingToCard ? 'animate-card-receive border-[#E8FF00]' : ''
+                }`}>
                   
                   {/* Left Calendar Badge */}
                   <div className="w-10 h-10 rounded-xl bg-[#F4F4F0] border border-[#E5E5DF] flex items-center justify-center text-[#0A0A0A] shrink-0">
@@ -552,7 +676,13 @@ export default function LandingPage() {
       <FaqSection />
 
       {/* 06 CTA BANNER SECTION */}
-      <CtaBanner />
+      <CtaBanner onOpenHowItWorks={openHowItWorks} />
+
+      {/* Interactive See How It Works Pipeline Simulation Modal */}
+      <HowItWorksModal
+        isOpen={isHowItWorksOpen}
+        onClose={closeHowItWorks}
+      />
 
     </div>
   );

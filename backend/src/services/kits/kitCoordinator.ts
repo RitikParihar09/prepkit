@@ -8,6 +8,7 @@ import { ScheduleAllocator } from '../scheduler/scheduleAllocator.js';
 import { TavilySearchProvider } from '../research/discussions/tavilySearchProvider.js';
 import { ResultFilter } from '../research/discussions/resultFilter.js';
 import { DiscussionExtractor, ExtractedInterviewEvidence } from '../research/discussions/discussionExtractor.js';
+import { getLLMProvider } from '../llm/llmProvider.js';
 
 export interface ProgressCallback {
   (status: string, message: string, progressPercent: number): void;
@@ -26,6 +27,13 @@ export class KitCoordinator {
     const report = (status: string, message: string, percent: number) => {
       if (onProgress) onProgress(status, message, percent);
     };
+
+    // STEP 0: Verify Gemini API Connection via Smoke Test
+    report('verifying_llm', 'Verifying Gemini API model connection...', 5);
+    const llm = getLLMProvider();
+    if (llm.runSmokeTest) {
+      await llm.runSmokeTest();
+    }
 
     // STEP 1: Analyze & Extract Job Description Requirements
     report('analyzing_jd', 'Analyzing job description & extracting requirements...', 10);

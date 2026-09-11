@@ -3,7 +3,11 @@
 import Link from 'next/link';
 import { ArrowRight, Play } from 'lucide-react';
 
-export function CtaBanner() {
+interface CtaBannerProps {
+  onOpenHowItWorks?: () => void;
+}
+
+export function CtaBanner({ onOpenHowItWorks }: CtaBannerProps) {
   return (
     <section className="relative w-full bg-[#FBFBF8] text-[#0A0A0A] border-t border-b border-[#E5E5DF] py-16 sm:py-20 overflow-hidden font-sans select-none">
       
@@ -111,13 +115,13 @@ export function CtaBanner() {
                 <ArrowRight className="w-4 h-4" />
               </Link>
 
-              <Link
-                href="/dashboard"
-                className="w-full sm:w-auto bg-white hover:bg-[#F4F4F0] text-[#0A0A0A] border border-[#CCCCCC] text-xs sm:text-sm font-semibold py-3.5 px-6 rounded-lg transition-all flex items-center justify-center gap-2 shadow-xs"
+              <button
+                onClick={onOpenHowItWorks}
+                className="w-full sm:w-auto bg-white hover:bg-[#F4F4F0] text-[#0A0A0A] border border-[#CCCCCC] text-xs sm:text-sm font-semibold py-3.5 px-6 rounded-lg transition-all flex items-center justify-center gap-2 shadow-2xs cursor-pointer"
               >
                 <Play className="w-3.5 h-3.5 fill-current" />
                 <span>See how it works</span>
-              </Link>
+              </button>
             </div>
 
           </div>

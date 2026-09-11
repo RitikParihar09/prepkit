@@ -186,7 +186,7 @@ Generate targeted interview questions ONLY for the provided uncovered requiremen
         requirement_ids: [req.id],
         front: `What are the key technical concepts behind ${req.text}?`,
         back: `${req.text} involves standard software engineering patterns, efficient algorithms, and robust system architecture.`,
-        confidence: 3,
+        confidence: 0,
         _meta: { generated: true, edited: false, pinned: false }
       });
     });

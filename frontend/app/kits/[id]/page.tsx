@@ -261,7 +261,7 @@ export default function KitDetailPage() {
         </div>
 
         {/* Metric Strip Divider */}
-        <div className="grid grid-cols-2 sm:grid-cols-5 gap-4 pt-6 font-mono text-xs text-[#0A0A0A]">
+        <div className="grid grid-cols-2 sm:grid-cols-6 gap-4 pt-6 font-mono text-xs text-[#0A0A0A]">
           <div className="border-r border-[#E5E5E0] pr-4">
             <span className="text-[#8A8A8A] block uppercase text-[10px]">REQUIREMENTS</span>
             <span className="text-lg font-bold">{kitData.role.requirements.length} REQS</span>
@@ -273,6 +273,10 @@ export default function KitDetailPage() {
           <div className="border-r border-[#E5E5E0] pr-4">
             <span className="text-[#8A8A8A] block uppercase text-[10px]">FLASHCARDS</span>
             <span className="text-lg font-bold">{kitData.flashcards.length} CARDS</span>
+          </div>
+          <div className="border-r border-[#E5E5E0] pr-4">
+            <span className="text-[#8A8A8A] block uppercase text-[10px]">PAGES CRAWLED</span>
+            <span className="text-lg font-bold">{kitData.source.pages_used?.length || 0} SOURCES</span>
           </div>
           <div className="border-r border-[#E5E5E0] pr-4">
             <span className="text-[#8A8A8A] block uppercase text-[10px]">TOTAL TIME</span>
@@ -319,7 +323,7 @@ export default function KitDetailPage() {
       {/* 1. OVERVIEW TAB */}
       {activeTab === 'overview' && (
         <div className="space-y-6">
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 font-mono text-xs">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4 font-mono text-xs">
             <div className="tech-panel p-5 border-[#0A0A0A] bg-white">
               <span className="text-[10px] text-[#8A8A8A] uppercase block mb-1">REQUIREMENT MATCH</span>
               <div className="text-2xl font-bold text-[#0A0A0A]">{coveredCount} / {mustReqs.length}</div>
@@ -338,6 +342,12 @@ export default function KitDetailPage() {
               <span className="text-[10px] text-[#8A8A8A] uppercase block mb-1">FLASHCARDS</span>
               <div className="text-2xl font-bold text-[#0A0A0A]">{kitData.flashcards.length}</div>
               <p className="text-[11px] text-[#666666] mt-2">Interactive review cards</p>
+            </div>
+
+            <div className="tech-panel p-5 border-[#0A0A0A] bg-white">
+              <span className="text-[10px] text-[#8A8A8A] uppercase block mb-1">WEBSITES CRAWLED</span>
+              <div className="text-2xl font-bold text-[#0A0A0A]">{kitData.source.pages_used?.length || 0}</div>
+              <p className="text-[11px] text-[#666666] mt-2">Web & discussion pages</p>
             </div>
 
             <div className="tech-panel p-5 border-[#0A0A0A] bg-white">

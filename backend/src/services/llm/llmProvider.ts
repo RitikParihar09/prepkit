@@ -5,6 +5,29 @@ import { config } from '../../config/env.js';
 export interface LLMProvider {
   generateText(prompt: string, systemPrompt?: string): Promise<string>;
   generateJSON<T>(prompt: string, schema: z.ZodType<T, any, any>, systemPrompt?: string): Promise<T>;
+  runSmokeTest?(): Promise<boolean>;
+}
+
+export interface LLMErrorDetails {
+  model: string;
+  clientType: string;
+  httpStatus?: number;
+  message: string;
+  code?: string;
+  availableModels?: string[];
+}
+
+export class GeminiAPIError extends Error {
+  public details: LLMErrorDetails;
+  public code: string;
+
+  constructor(details: LLMErrorDetails) {
+    const statusStr = details.httpStatus ? ` (Status: ${details.httpStatus})` : '';
+    super(`[Gemini API Error] Model "${details.model}" via ${details.clientType} failed${statusStr}: ${details.message}`);
+    this.name = 'GeminiAPIError';
+    this.code = details.code || 'GEMINI_API_ERROR';
+    this.details = details;
+  }
 }
 
 export async function withRetry<T>(
@@ -17,35 +40,41 @@ export async function withRetry<T>(
     try {
       return await fn();
     } catch (error: any) {
-      const status = error.response?.status;
-      const errMsg = error.message?.toLowerCase() || '';
+      const status = error.response?.status || error.details?.httpStatus;
+      const errMsg = error.message || error.details?.message || '';
+      const is429 = status === 429 || errMsg.includes('RESOURCE_EXHAUSTED') || errMsg.includes('429');
 
-      // Do not retry permanent client errors (400, 404, 401, 403)
-      if (status === 400 || status === 404 || status === 401 || status === 403) {
+      // Do not retry permanent client errors (400, 404, 401, 403), EXCEPT 429 which MUST be retried with backoff!
+      if (!is429 && (status === 400 || status === 404 || status === 401 || status === 403)) {
         throw error;
       }
 
       attempt++;
       if (attempt > maxRetries) {
-        console.error(`[LLM Retry] Exceeded max retries (${maxRetries}). Final error: ${error.message}`);
+        console.error(`[LLM Retry] Exceeded max retries (${maxRetries}). Final error: ${errMsg}`);
         throw error;
       }
 
-      // Check for Retry-After header
-      const retryAfterHeader = error.response?.headers?.['retry-after'];
       let delayMs: number;
-      if (retryAfterHeader && !isNaN(Number(retryAfterHeader))) {
-        delayMs = Number(retryAfterHeader) * 1000 + 1000;
-      } else if (status === 429 || errMsg.includes('429') || errMsg.includes('resource_exhausted')) {
-        // Quota window reset backoff (4s, 8s, 12s, 16s, 20s)
-        delayMs = 4000 * attempt + Math.random() * 1000;
+      if (is429) {
+        // Extract "Please retry in X.Xs" from error message if present
+        const retryMatch = errMsg.match(/Please retry in\s+([0-9.]+)\s*s/i);
+        const retryAfterHeader = error.response?.headers?.['retry-after'];
+        if (retryMatch && !isNaN(Number(retryMatch[1]))) {
+          delayMs = Math.ceil(Number(retryMatch[1]) * 1000) + 1500;
+        } else if (retryAfterHeader && !isNaN(Number(retryAfterHeader))) {
+          delayMs = Number(retryAfterHeader) * 1000 + 1500;
+        } else {
+          delayMs = 6000 * attempt + Math.random() * 1000;
+        }
+        console.warn(`[Gemini Free Tier Pacing] Rate limit 429 received. Pausing for ${Math.round(delayMs / 1000)}s before retry (${attempt}/${maxRetries})...`);
       } else {
         const backoffFactor = Math.pow(2, attempt);
         const jitter = Math.random() * 500;
         delayMs = initialDelayMs * backoffFactor + jitter;
+        console.warn(`[LLM Retry] Attempt ${attempt}/${maxRetries} failed (${errMsg}). Retrying in ${Math.round(delayMs)}ms...`);
       }
 
-      console.warn(`[LLM Retry] Attempt ${attempt}/${maxRetries} failed (${error.message}). Retrying in ${Math.round(delayMs)}ms...`);
       await new Promise(res => setTimeout(res, delayMs));
     }
   }
@@ -88,18 +117,117 @@ export class GeminiProvider implements LLMProvider {
   private apiKey: string;
   private model: string;
 
-  constructor(apiKey: string, model: string = 'gemini-3.6-flash') {
+  constructor(apiKey: string, model?: string) {
     this.apiKey = apiKey;
-    // Strip trailing '-medium' or normalize invalid model string
-    this.model = (model || 'gemini-3.6-flash').replace('-medium', '');
+    const configuredModel = model || process.env.GEMINI_MODEL || process.env.LLM_MODEL || config.geminiModel || 'gemini-3.5-flash-lite';
+    this.model = configuredModel.replace('-medium', '');
+  }
+
+  /**
+   * Diagnostic utility: Lists models available to the current API key that support generateContent.
+   * NEVER logs the API key.
+   */
+  static async diagnoseModelAvailability(apiKey: string, targetModel: string): Promise<{
+    isAvailable: boolean;
+    supportsGenerateContent: boolean;
+    availableModels: string[];
+    error?: string;
+  }> {
+    const clientType = 'v1beta REST models list';
+    const modelsEndpoint = 'https://generativelanguage.googleapis.com/v1beta/models';
+    try {
+      console.log(`[Gemini Diagnostic] Checking model availability via ${clientType} for target model "${targetModel}"...`);
+      const url = `${modelsEndpoint}?key=${apiKey}`;
+      const res = await axios.get(url, { timeout: 15000 });
+      const rawModels: any[] = res.data?.models || [];
+      
+      const availableModels = rawModels
+        .filter(m => Array.isArray(m.supportedGenerationMethods) && m.supportedGenerationMethods.includes('generateContent'))
+        .map(m => (m.name || '').replace('models/', ''));
+
+      const cleanTarget = targetModel.replace('models/', '');
+      const targetObj = rawModels.find(m => (m.name || '').replace('models/', '') === cleanTarget);
+      const isAvailable = !!targetObj;
+      const supportsGenerateContent = isAvailable && Array.isArray(targetObj.supportedGenerationMethods) && targetObj.supportedGenerationMethods.includes('generateContent');
+
+      console.log(`[Gemini Diagnostic Success] Models available to current key with generateContent support:`, availableModels);
+      if (!isAvailable) {
+        console.warn(`[Gemini Diagnostic Warning] Configured model "${targetModel}" was NOT found in available models list for this API key.`);
+      } else if (!supportsGenerateContent) {
+        console.warn(`[Gemini Diagnostic Warning] Configured model "${targetModel}" is present but does NOT list "generateContent" in supported methods.`);
+      }
+
+      return {
+        isAvailable,
+        supportsGenerateContent,
+        availableModels
+      };
+    } catch (err: any) {
+      const status = err.response?.status;
+      const rawMsg = err.response?.data?.error?.message || err.message || 'Failed to list models';
+      const sanitizedMsg = rawMsg.replace(/key=[^&]+/gi, 'key=[REDACTED]');
+      console.error(`[Gemini Diagnostic Error] Client: ${clientType} | Status: ${status || 'N/A'} | Error: ${sanitizedMsg}`);
+      return {
+        isAvailable: false,
+        supportsGenerateContent: false,
+        availableModels: [],
+        error: sanitizedMsg
+      };
+    }
+  }
+
+  /**
+   * Gemini Smoke Test: Sends "Reply with exactly: GEMINI_OK" before full pipeline execution.
+   */
+  async runSmokeTest(): Promise<boolean> {
+    console.log(`[Gemini Smoke Test] Sending smoke test to model "${this.model}"...`);
+    try {
+      const response = await this.generateText('Reply with exactly: GEMINI_OK');
+      if (response.includes('GEMINI_OK')) {
+        console.log(`[Gemini Smoke Test Passed] Model "${this.model}" responded successfully.`);
+        return true;
+      }
+      const diag = await GeminiProvider.diagnoseModelAvailability(this.apiKey, this.model);
+      throw new GeminiAPIError({
+        model: this.model,
+        clientType: 'v1beta REST generateContent',
+        message: `Smoke test returned unexpected response: "${response.substring(0, 100)}"`,
+        code: 'SMOKE_TEST_FAILED',
+        availableModels: diag.availableModels
+      });
+    } catch (err: any) {
+      if (err instanceof GeminiAPIError && err.details?.httpStatus !== 429) {
+        throw err;
+      }
+      const status = err.response?.status || err.details?.httpStatus;
+      const rawMsg = err.response?.data?.error?.message || err.message || 'Gemini smoke test failed';
+      const sanitizedMsg = rawMsg.replace(/key=[^&]+/gi, 'key=[REDACTED]');
+      const code = err.response?.data?.error?.status || err.code || 'SMOKE_TEST_ERROR';
+
+      const diag = await GeminiProvider.diagnoseModelAvailability(this.apiKey, this.model);
+
+      throw new GeminiAPIError({
+        model: this.model,
+        clientType: 'v1beta REST generateContent',
+        httpStatus: status,
+        message: sanitizedMsg,
+        code,
+        availableModels: diag.availableModels
+      });
+    }
   }
 
   async generateText(prompt: string, systemPrompt?: string): Promise<string> {
     return withRetry(async () => {
-      let targetModel = this.model;
+      const targetModel = this.model;
+      const clientType = 'v1beta REST generateContent';
+      const endpoint = `https://generativelanguage.googleapis.com/v1beta/models/${targetModel}:generateContent`;
+
+      // Log request WITHOUT logging API key
+      console.log(`[Gemini API Request] Model: "${targetModel}" | Endpoint: ${endpoint} | Client: ${clientType} | Prompt length: ${prompt.length} chars`);
+
       try {
-        console.log(`[Gemini API Request] Sending to model "${targetModel}" (API Key: ${this.apiKey.substring(0, 10)}...) | Prompt length: ${prompt.length} chars`);
-        const url = `https://generativelanguage.googleapis.com/v1beta/models/${targetModel}:generateContent?key=${this.apiKey}`;
+        const url = `${endpoint}?key=${this.apiKey}`;
         const payload = {
           contents: [
             {
@@ -115,32 +243,46 @@ export class GeminiProvider implements LLMProvider {
         const res = await axios.post(url, payload, { timeout: 30000 });
         const text = res.data?.candidates?.[0]?.content?.parts?.[0]?.text;
         if (!text) {
-          throw new Error('Gemini API returned an empty text response.');
+          throw new GeminiAPIError({
+            model: targetModel,
+            clientType,
+            httpStatus: res.status,
+            message: 'Gemini API returned an empty text response candidate.',
+            code: 'EMPTY_RESPONSE'
+          });
         }
-        console.log(`[Gemini API Response Success] Model "${targetModel}" returned ${text.length} characters. Sample: "${text.substring(0, 80).replace(/\n/g, ' ')}..."`);
+
+        // Log success WITHOUT logging API key
+        console.log(`[Gemini API Success] Model: "${targetModel}" | Client: ${clientType} | HTTP Status: ${res.status} | Response length: ${text.length} chars`);
         return text;
       } catch (err: any) {
-        const status = err.response?.status;
-        if ((status === 503 || status === 404 || status === 400 || status === 429) && targetModel !== 'gemini-2.5-flash') {
-          console.warn(`[Gemini Provider] Model ${targetModel} returned ${status}. Falling back to gemini-2.5-flash.`);
-          targetModel = 'gemini-2.5-flash';
-          const fallbackUrl = `https://generativelanguage.googleapis.com/v1beta/models/${targetModel}:generateContent?key=${this.apiKey}`;
-          const res = await axios.post(fallbackUrl, {
-            contents: [
-              {
-                role: 'user',
-                parts: [{ text: systemPrompt ? `${systemPrompt}\n\n${prompt}` : prompt }]
-              }
-            ],
-            generationConfig: { temperature: 0.2 }
-          }, { timeout: 30000 });
-          const text = res.data?.candidates?.[0]?.content?.parts?.[0]?.text;
-          if (text) {
-            console.log(`[Gemini API Response Success] Model "${targetModel}" returned ${text.length} characters.`);
-            return text;
-          }
+        if (err instanceof GeminiAPIError) {
+          throw err;
         }
-        throw err;
+
+        const status = err.response?.status;
+        const errCode = err.response?.data?.error?.status || err.code || 'API_ERROR';
+        const rawMsg = err.response?.data?.error?.message || err.message || 'Unknown API request error';
+        const sanitizedMsg = rawMsg.replace(/key=[^&]+/gi, 'key=[REDACTED]');
+
+        // Log sanitized error details
+        console.error(`[Gemini API Error] Model: "${targetModel}" | Endpoint: ${endpoint} | Client: ${clientType} | HTTP Status: ${status || 'N/A'} | Error: [${errCode}] ${sanitizedMsg}`);
+
+        const apiError = new GeminiAPIError({
+          model: targetModel,
+          clientType,
+          httpStatus: status,
+          message: sanitizedMsg,
+          code: errCode
+        });
+
+        // Run diagnostic if request failed due to client error / unavailable model (e.g. 404 NOT_FOUND)
+        if (status === 404 || status === 400 || status === 401 || status === 403) {
+          const diag = await GeminiProvider.diagnoseModelAvailability(this.apiKey, targetModel);
+          apiError.details.availableModels = diag.availableModels;
+        }
+
+        throw apiError;
       }
     });
   }
@@ -155,7 +297,6 @@ export class GeminiProvider implements LLMProvider {
       return schema.parse(parsedJSON);
     } catch (parseError: any) {
       console.warn('[LLM JSON Parse Warning] Initial JSON parse failed. Attempting 1-pass repair prompt...', parseError.message);
-      // Execute 1-pass repair loop
       const repairPrompt = `The following JSON response was invalid or violated the schema:\n\n${cleanedJSON}\n\nValidation error: ${parseError.message}\n\nPlease fix the JSON formatting and schema compliance. Return ONLY the corrected JSON:`;
       const repairedText = await this.generateText(repairPrompt, fullSystemPrompt);
       const repairedJSON = extractJSONString(repairedText);
@@ -172,6 +313,10 @@ export class OpenAIProvider implements LLMProvider {
   constructor(apiKey: string, model: string = 'gpt-4o-mini') {
     this.apiKey = apiKey;
     this.model = model;
+  }
+
+  async runSmokeTest(): Promise<boolean> {
+    return true;
   }
 
   async generateText(prompt: string, systemPrompt?: string): Promise<string> {
@@ -224,14 +369,16 @@ export class OpenAIProvider implements LLMProvider {
 }
 
 export class MockLLMProvider implements LLMProvider {
+  async runSmokeTest(): Promise<boolean> {
+    return true;
+  }
+
   async generateText(prompt: string): Promise<string> {
     return `Mock text response for prompt: ${prompt.substring(0, 50)}`;
   }
 
   async generateJSON<T>(prompt: string, schema: z.ZodType<T, any, any>): Promise<T> {
-    // Return structured default mock data based on simple schema inspections
-    // This allows evaluator or offline runs to complete deterministically without external keys!
-    return schema.parse({}) as T; // Note: actual mock data handlers in extraction/generation services provide rich defaults when provider === 'mock'
+    return schema.parse({}) as T;
   }
 }
 
@@ -244,7 +391,7 @@ export function getLLMProvider(): LLMProvider {
       console.warn('[LLM Provider] LLM_API_KEY is not set. Falling back to MockLLMProvider for offline execution.');
       return new MockLLMProvider();
     }
-    return new GeminiProvider(config.llmApiKey, config.llmModel);
+    return new GeminiProvider(config.llmApiKey, config.geminiModel);
   }
   return new MockLLMProvider();
 }

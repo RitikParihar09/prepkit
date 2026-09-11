@@ -129,17 +129,17 @@ export function WeakSpotsView({ kitId, flashcards, questions, requirements }: We
       </div>
 
       {/* Priority Recommendations */}
-      <div className="tech-panel p-6 bg-[#0A0A0A] text-white border-[#0A0A0A] space-y-3">
-        <span className="text-[10px] text-[#8A8A8A] uppercase tracking-widest block">
+      <div className="tech-panel-dark p-6 space-y-3">
+        <span className="text-[10px] text-[#8A8A8A] uppercase tracking-widest block font-bold">
           RECOMMENDED NEXT PRACTICE PRIORITY
         </span>
         <ol className="space-y-2 text-xs">
           {scores.slice(0, 3).map((s, i) => (
             <li key={s.requirement.id} className="flex items-center justify-between border-b border-[#222222] pb-2">
-              <span>
-                <strong className="text-[#E8FF00]">0{i + 1}.</strong> {s.requirement.text}
+              <span className="text-white font-medium pr-4">
+                <strong className="text-[#E8FF00] mr-2">0{i + 1}.</strong> {s.requirement.text}
               </span>
-              <span className="text-[#8A8A8A]">SCORE: {s.avgConfidence}/5.0</span>
+              <span className="text-[#8A8A8A] shrink-0 font-bold">SCORE: {s.avgConfidence}/5.0</span>
             </li>
           ))}
         </ol>

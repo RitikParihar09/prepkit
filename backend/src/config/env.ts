@@ -14,7 +14,8 @@ export const config = {
   llmApiKey: process.env.GEMINI_API_KEY || process.env.LLM_API_KEY || '',
   geminiApiKey: process.env.GEMINI_API_KEY || process.env.LLM_API_KEY || '',
   tavilyApiKey: process.env.TAVILY_API_KEY || '',
-  llmModel: process.env.LLM_MODEL || 'gemini-2.5-flash',
+  geminiModel: process.env.GEMINI_MODEL || process.env.LLM_MODEL || 'gemini-3.6-flash',
+  llmModel: process.env.GEMINI_MODEL || process.env.LLM_MODEL || 'gemini-3.6-flash',
   allowLocalUrls: process.env.ALLOW_LOCAL_URLS === 'true',
   frontendUrl: process.env.FRONTEND_URL || 'http://localhost:3000',
   backendUrl: process.env.BACKEND_URL || 'http://localhost:5001'
