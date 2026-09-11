@@ -126,42 +126,42 @@ export default function PracticeModePage() {
   const progressPercent = Math.round(((currentIndex + 1) / flashcards.length) * 100);
 
   return (
-    <div className="h-[calc(100vh-4rem)] max-h-[calc(100vh-4rem)] w-full bg-[#0B0C0E] text-white flex flex-col justify-between p-2 sm:p-4 font-sans selection:bg-[#CCFF00] selection:text-black select-none relative overflow-hidden">
+    <div className="h-[calc(100vh-4rem)] max-h-[calc(100vh-4rem)] w-full bg-[#F9F9F6] text-[#0A0A0A] flex flex-col justify-between p-2 sm:p-4 font-sans selection:bg-[#CCFF00] selection:text-black select-none relative overflow-hidden">
       
-      {/* Technical Grid Overlay */}
+      {/* Light Technical Grid Overlay */}
       <div 
-        className="absolute inset-0 pointer-events-none opacity-20"
+        className="absolute inset-0 pointer-events-none opacity-40"
         style={{
           backgroundImage: `
-            linear-gradient(to right, rgba(255, 255, 255, 0.05) 1px, transparent 1px),
-            linear-gradient(to bottom, rgba(255, 255, 255, 0.05) 1px, transparent 1px)
+            linear-gradient(to right, rgba(0, 0, 0, 0.035) 1px, transparent 1px),
+            linear-gradient(to bottom, rgba(0, 0, 0, 0.035) 1px, transparent 1px)
           `,
-          backgroundSize: '40px 40px'
+          backgroundSize: '36px 36px'
         }}
       ></div>
 
       {/* TOP HEADER NAVIGATION BAR */}
-      <header className="max-w-5xl mx-auto w-full flex items-center justify-between gap-2 sm:gap-4 py-2 border-b border-[#1C1E24] font-mono text-xs relative z-10 shrink-0">
+      <header className="max-w-5xl mx-auto w-full flex items-center justify-between gap-2 sm:gap-4 py-2 border-b border-[#E5E5DF] font-mono text-xs relative z-10 shrink-0">
         <Link
           href={`/kits/${kitId}`}
-          className="flex items-center gap-2 text-[#9EA5B5] hover:text-white bg-[#14161C] hover:bg-[#1C1E26] border border-[#242834] px-3 py-1.5 rounded-xl transition-all"
+          className="flex items-center gap-2 text-[#444444] hover:text-black bg-white hover:bg-[#F4F4EE] border border-[#D0D0CA] px-3 py-1.5 rounded-xl transition-all shadow-2xs"
         >
-          <ArrowLeft className="w-3.5 h-3.5 text-[#CCFF00]" />
+          <ArrowLeft className="w-3.5 h-3.5 text-[#0A0A0A]" />
           <span className="uppercase tracking-wider text-[10px] sm:text-[11px] font-bold">EXIT PRACTICE</span>
         </Link>
 
         {/* Center Progress Pill */}
-        <div className="flex items-center gap-2 sm:gap-3 bg-[#14161C] border border-[#242834] px-3 py-1.5 rounded-xl">
-          <Flame className="w-3.5 h-3.5 text-[#CCFF00] animate-pulse" />
+        <div className="flex items-center gap-2 sm:gap-3 bg-white border border-[#E5E5DF] px-3.5 py-1.5 rounded-xl shadow-2xs">
+          <Flame className="w-3.5 h-3.5 text-[#88B800] animate-pulse" />
           <div className="text-center">
-            <span className="text-[10px] sm:text-[11px] font-bold text-white uppercase tracking-widest">
+            <span className="text-[10px] sm:text-[11px] font-bold text-[#0A0A0A] uppercase tracking-widest">
               CARD {String(currentIndex + 1).padStart(2, '0')} / {String(flashcards.length).padStart(2, '0')}
             </span>
           </div>
         </div>
 
         {/* Right Percentage Badge */}
-        <div className="flex items-center gap-2 bg-[#14161C] border border-[#242834] px-3 py-1.5 rounded-xl text-[#CCFF00] font-bold text-[10px] sm:text-[11px]">
+        <div className="flex items-center gap-2 bg-white border border-[#E5E5DF] px-3.5 py-1.5 rounded-xl text-[#0A0A0A] font-bold text-[10px] sm:text-[11px] shadow-2xs">
           <span className="w-2 h-2 rounded-full bg-[#CCFF00]"></span>
           <span className="hidden xs:inline">{progressPercent}% COMPLETE</span>
           <span className="xs:hidden">{progressPercent}%</span>
@@ -175,49 +175,54 @@ export default function PracticeModePage() {
         <button
           onClick={handlePrevious}
           disabled={currentIndex === 0}
-          className="hidden md:flex items-center justify-center w-11 h-11 rounded-2xl bg-[#14161C] hover:bg-[#1C1E26] disabled:opacity-20 border-2 border-[#242834] hover:border-[#CCFF00]/50 text-white transition-all cursor-pointer mr-3 shadow-xl shrink-0 active:scale-95"
+          className="hidden md:flex items-center justify-center w-11 h-11 rounded-2xl bg-white hover:bg-[#F4F4EE] disabled:opacity-20 border-2 border-[#0A0A0A] text-[#0A0A0A] transition-all cursor-pointer mr-3 shadow-md shrink-0 active:scale-95"
           title="Previous Card (Left Arrow)"
         >
-          <ArrowLeft className="w-5 h-5 text-[#CCFF00]" />
+          <ArrowLeft className="w-5 h-5" />
         </button>
 
-        {/* Card wrapper */}
-        <div className="relative w-full max-w-3xl flex flex-col h-full max-h-[460px] min-h-0">
-          <div className="absolute -inset-1 bg-[#CCFF00]/10 rounded-3xl blur-xl opacity-70 pointer-events-none"></div>
+        {/* Card wrapper with exact screenshot aesthetics */}
+        <div className="relative w-full max-w-2xl flex flex-col h-full max-h-[470px] min-h-0">
+          <div className="absolute -inset-1 bg-[#CCFF00]/20 rounded-3xl blur-xl opacity-60 pointer-events-none"></div>
 
-          <div className="relative w-full h-full bg-[#12141A] border-2 border-[#222632] rounded-3xl p-4 sm:p-7 flex flex-col justify-between shadow-2xl overflow-y-auto">
+          <div className="relative w-full h-full bg-white border-2 border-[#0A0A0A] border-t-4 border-t-[#CCFF00] rounded-3xl p-5 sm:p-8 flex flex-col justify-between shadow-2xl overflow-y-auto">
             
-            {/* Card Header Strip */}
-            <div className="flex items-center justify-between text-xs text-[#8A95A5] font-mono pb-2.5 border-b border-[#1E222D] shrink-0">
-              <div className="flex items-center gap-2">
-                <span className="w-2 h-2 rounded-full bg-[#CCFF00]"></span>
-                <span className="font-bold text-white uppercase tracking-wider text-[10px] sm:text-[11px]">CARD ID: {currentCard.id}</span>
+            {/* Card Top Strip: Squircle Icon Badge on Left + Monospace Tag on Right */}
+            <div className="flex items-center justify-between pb-3 shrink-0">
+              {/* Neon Lime Squircle Icon Badge */}
+              <div className="w-12 h-12 rounded-2xl bg-[#CCFF00] text-black border border-black/10 flex items-center justify-center shadow-xs shrink-0">
+                {!isRevealed ? (
+                  <HelpCircle className="w-6 h-6 stroke-[2.5]" />
+                ) : (
+                  <Sparkles className="w-6 h-6 stroke-[2.5]" />
+                )}
               </div>
-              <div className="bg-[#1A1D26] border border-[#292D3B] px-2.5 py-0.5 rounded-lg text-[9px] sm:text-[10px] text-[#A0A8B8] uppercase">
-                REQS: {currentCard.requirement_ids.join(', ')}
+
+              {/* Top Right Monospace Tag (Matching Screenshot "02 // TARGETED") */}
+              <div className="bg-[#F0F1EC] border border-[#E0E0DA] px-3.5 py-1.5 rounded-xl text-[10px] font-mono font-bold text-[#0A0A0A] uppercase tracking-wider">
+                CARD {String(currentIndex + 1).padStart(2, '0')} // REQS: {currentCard.requirement_ids.join(', ')}
               </div>
             </div>
 
             {/* Prompt / Answer Main Content Area */}
-            <div className="my-auto py-3 text-center overflow-y-auto max-h-[260px] scrollbar-thin">
+            <div className="my-auto py-3 space-y-4 text-left overflow-y-auto max-h-[260px] scrollbar-thin">
               {!isRevealed ? (
-                <div className="space-y-3 max-w-2xl mx-auto">
-                  <div className="inline-flex items-center gap-2 font-mono text-[10px] sm:text-[11px] font-bold text-[#CCFF00] uppercase tracking-[0.2em] bg-[#1C202C] px-3 py-1 rounded-full border border-[#2E3446]">
-                    <HelpCircle className="w-3.5 h-3.5" />
+                <div className="space-y-3">
+                  <div className="inline-flex items-center gap-2 font-mono text-[10px] font-bold text-[#666666] uppercase tracking-[0.18em]">
                     <span>FRONT // QUESTION PROMPT</span>
                   </div>
-                  <h2 className="text-base sm:text-xl font-extrabold text-white leading-relaxed tracking-tight font-sans">
+                  <h2 className="text-xl sm:text-2xl font-extrabold text-[#0A0A0A] leading-tight tracking-tight font-sans">
                     {currentCard.front}
                   </h2>
                 </div>
               ) : (
-                <div className="space-y-3 max-w-2xl mx-auto animate-in fade-in duration-200">
-                  <div className="inline-flex items-center gap-2 font-mono text-[10px] sm:text-[11px] font-bold text-[#CCFF00] uppercase tracking-[0.2em] bg-[#1C202C] px-3 py-1 rounded-full border border-[#2E3446]">
+                <div className="space-y-3 animate-in fade-in duration-200">
+                  <div className="inline-flex items-center gap-2 font-mono text-[10px] font-bold text-[#88B800] uppercase tracking-[0.18em]">
                     <Sparkles className="w-3.5 h-3.5" />
                     <span>BACK // TECHNICAL ANSWER OUTLINE</span>
                   </div>
-                  <div className="bg-[#171A22] border border-[#272B38] p-4 sm:p-5 rounded-2xl text-left shadow-inner">
-                    <p className="text-xs sm:text-sm text-white/95 leading-relaxed whitespace-pre-line font-sans">
+                  <div className="bg-[#F7F7F3] border border-[#E5E5DF] p-5 rounded-2xl text-left shadow-inner">
+                    <p className="text-xs sm:text-sm text-[#222222] leading-relaxed whitespace-pre-line font-sans font-medium">
                       {currentCard.back}
                     </p>
                   </div>
@@ -225,27 +230,35 @@ export default function PracticeModePage() {
               )}
             </div>
 
-            {/* Action Footer Button / Confidence Scale */}
-            <div className="shrink-0 pt-2">
+            {/* Bottom Card Footer Strip (Divider + Monospace Metadata + Action) */}
+            <div className="shrink-0 pt-3 border-t border-[#F0F0EA] space-y-3">
+              
               {!isRevealed ? (
-                <button
-                  onClick={() => setIsRevealed(true)}
-                  className="w-full bg-[#CCFF00] hover:bg-[#b8e600] text-black font-extrabold py-3 px-6 rounded-2xl text-xs font-mono uppercase tracking-wider flex items-center justify-center gap-2 shadow-lg shadow-[#CCFF00]/10 transition-all cursor-pointer transform hover:-translate-y-0.5 active:translate-y-0"
-                >
-                  <Eye className="w-4 h-4 stroke-[2.5]" />
-                  <span>REVEAL ANSWER</span>
-                </button>
+                <div className="flex items-center justify-between gap-4">
+                  <div className="flex items-center gap-2 font-mono text-[11px] text-[#777777]">
+                    <span className="w-2 h-2 rounded-full bg-[#CCFF00]"></span>
+                    <span>100% Requirement Match</span>
+                  </div>
+
+                  <button
+                    onClick={() => setIsRevealed(true)}
+                    className="bg-[#CCFF00] hover:bg-[#b8e600] text-black font-extrabold py-2.5 px-5 rounded-xl text-xs font-mono uppercase tracking-wider flex items-center justify-center gap-2 shadow-sm transition-all cursor-pointer transform hover:-translate-y-0.5 active:translate-y-0"
+                  >
+                    <Eye className="w-4 h-4 stroke-[2.5]" />
+                    <span>REVEAL ANSWER</span>
+                  </button>
+                </div>
               ) : (
-                <div className="space-y-2 pt-2 border-t border-[#1E222D] font-mono text-xs animate-in fade-in duration-200">
-                  <span className="text-[9px] sm:text-[10px] text-[#A0A8B8] uppercase tracking-wider text-center block font-bold">
-                    RATE YOUR CONFIDENCE LEVEL (QUEUES NEXT SESSION)
+                <div className="space-y-2 font-mono text-xs animate-in fade-in duration-200">
+                  <span className="text-[10px] text-[#777777] uppercase tracking-wider text-center block font-bold">
+                    RATE YOUR CONFIDENCE LEVEL
                   </span>
                   <div className="grid grid-cols-5 gap-1.5 sm:gap-2">
                     {[
-                      { score: 1, label: '1 · NONE', color: 'bg-[#181B22] text-zinc-400 border-[#2B2F3D] hover:bg-[#222633]' },
-                      { score: 2, label: '2 · WEAK', color: 'bg-[#1C202C] text-amber-300 border-amber-900/60 hover:bg-[#272D3E]' },
-                      { score: 3, label: '3 · MID', color: 'bg-[#1C202C] text-white border-[#2E3446] hover:bg-[#272D3E]' },
-                      { score: 4, label: '4 · GOOD', color: 'bg-[#1C202C] text-[#CCFF00] border-[#CCFF00]/40 hover:bg-[#272D3E]' },
+                      { score: 1, label: '1 · NONE', color: 'bg-[#F2F2EC] text-[#555555] border-[#D0D0CA] hover:bg-[#EAEAE2]' },
+                      { score: 2, label: '2 · WEAK', color: 'bg-amber-100 text-amber-900 border-amber-300 hover:bg-amber-200' },
+                      { score: 3, label: '3 · MID', color: 'bg-white text-[#0A0A0A] border-[#D0D0CA] hover:bg-[#F4F4EE]' },
+                      { score: 4, label: '4 · GOOD', color: 'bg-[#F2F6E8] text-[#557700] border-[#C2E080] hover:bg-[#E5F0D0]' },
                       { score: 5, label: '5 · HIGH', color: 'bg-[#CCFF00] text-black border-[#CCFF00] hover:bg-[#b8e600] font-extrabold' }
                     ].map(item => (
                       <button
@@ -259,6 +272,7 @@ export default function PracticeModePage() {
                   </div>
                 </div>
               )}
+
             </div>
 
           </div>
@@ -268,20 +282,20 @@ export default function PracticeModePage() {
         <button
           onClick={handleNext}
           disabled={currentIndex === flashcards.length - 1}
-          className="hidden md:flex items-center justify-center w-11 h-11 rounded-2xl bg-[#14161C] hover:bg-[#1C1E26] disabled:opacity-20 border-2 border-[#242834] hover:border-[#CCFF00]/50 text-white transition-all cursor-pointer ml-3 shadow-xl shrink-0 active:scale-95"
+          className="hidden md:flex items-center justify-center w-11 h-11 rounded-2xl bg-white hover:bg-[#F4F4EE] disabled:opacity-20 border-2 border-[#0A0A0A] text-[#0A0A0A] transition-all cursor-pointer ml-3 shadow-md shrink-0 active:scale-95"
           title="Next Card (Right Arrow)"
         >
-          <ArrowRight className="w-5 h-5 text-[#CCFF00]" />
+          <ArrowRight className="w-5 h-5" />
         </button>
 
       </main>
 
-      {/* FIXED BOTTOM CONTROL NAVIGATION BAR (ALWAYS VISIBLE WITHOUT SCROLL) */}
-      <footer className="max-w-3xl mx-auto w-full flex items-center justify-between py-2 border-t border-[#1C1E24] font-mono text-xs relative z-10 shrink-0 bg-[#0B0C0E]/90 backdrop-blur-md">
+      {/* FIXED BOTTOM CONTROL NAVIGATION BAR */}
+      <footer className="max-w-3xl mx-auto w-full flex items-center justify-between py-2 border-t border-[#E5E5DF] font-mono text-xs relative z-10 shrink-0 bg-white/90 backdrop-blur-md">
         <button
           onClick={handlePrevious}
           disabled={currentIndex === 0}
-          className="flex items-center gap-2 bg-[#CCFF00]/10 hover:bg-[#CCFF00]/20 text-[#CCFF00] disabled:opacity-20 border border-[#CCFF00]/40 px-4 py-2 sm:px-6 sm:py-2.5 rounded-xl transition-all cursor-pointer uppercase text-[11px] sm:text-xs font-extrabold shadow-md active:scale-95"
+          className="flex items-center gap-2 bg-white hover:bg-[#F4F4EE] text-[#0A0A0A] disabled:opacity-30 border border-[#D0D0CA] px-4 py-2 sm:px-6 sm:py-2.5 rounded-xl transition-all cursor-pointer uppercase text-[11px] sm:text-xs font-extrabold shadow-2xs active:scale-95"
         >
           <ArrowLeft className="w-4 h-4 stroke-[2.5]" />
           <span>PREVIOUS</span>
@@ -290,9 +304,9 @@ export default function PracticeModePage() {
         <div className="flex items-center gap-2">
           <button
             onClick={() => setIsRevealed(!isRevealed)}
-            className="bg-[#14161C] hover:bg-[#1C1E26] text-[#A0A8B8] hover:text-white border border-[#242834] px-3 py-1.5 sm:px-4 sm:py-2 rounded-xl transition-all text-[10px] sm:text-[11px] font-bold uppercase flex items-center gap-1.5 cursor-pointer"
+            className="bg-white hover:bg-[#F4F4EE] text-[#333333] hover:text-black border border-[#D0D0CA] px-3 py-1.5 sm:px-4 sm:py-2 rounded-xl transition-all text-[10px] sm:text-[11px] font-bold uppercase flex items-center gap-1.5 cursor-pointer shadow-2xs"
           >
-            <Eye className="w-3.5 h-3.5 text-[#CCFF00]" />
+            <Eye className="w-3.5 h-3.5 text-[#0A0A0A]" />
             <span className="hidden sm:inline">{isRevealed ? 'FLIP TO FRONT' : 'FLIP TO BACK'}</span>
             <span className="sm:hidden">{isRevealed ? 'FRONT' : 'BACK'}</span>
           </button>
@@ -302,17 +316,17 @@ export default function PracticeModePage() {
               setCurrentIndex(0);
               setIsRevealed(false);
             }}
-            className="p-1.5 sm:p-2 bg-[#14161C] hover:bg-[#1C1E26] text-[#A0A8B8] hover:text-white border border-[#242834] rounded-xl transition-all cursor-pointer"
+            className="p-1.5 sm:p-2 bg-white hover:bg-[#F4F4EE] text-[#333333] border border-[#D0D0CA] rounded-xl transition-all cursor-pointer shadow-2xs"
             title="Restart Session"
           >
-            <RotateCcw className="w-4 h-4 text-[#CCFF00]" />
+            <RotateCcw className="w-4 h-4 text-[#0A0A0A]" />
           </button>
         </div>
 
         <button
           onClick={handleNext}
           disabled={currentIndex === flashcards.length - 1}
-          className="flex items-center gap-2 bg-[#CCFF00] hover:bg-[#b8e600] text-black disabled:opacity-20 border border-[#CCFF00] px-4 py-2 sm:px-6 sm:py-2.5 rounded-xl transition-all cursor-pointer uppercase text-[11px] sm:text-xs font-extrabold shadow-md shadow-[#CCFF00]/20 active:scale-95"
+          className="flex items-center gap-2 bg-[#0A0A0A] hover:bg-[#222222] text-white disabled:opacity-30 border border-[#0A0A0A] px-4 py-2 sm:px-6 sm:py-2.5 rounded-xl transition-all cursor-pointer uppercase text-[11px] sm:text-xs font-extrabold shadow-md active:scale-95"
         >
           <span>NEXT</span>
           <ArrowRight className="w-4 h-4 stroke-[2.5]" />
