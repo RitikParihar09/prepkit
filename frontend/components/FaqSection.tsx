@@ -62,13 +62,13 @@ export function FaqSection() {
       {/* SECTION HEADER */}
       <div className="text-center max-w-2xl mx-auto space-y-4 mb-14">
         <div className="inline-flex items-center gap-2 font-mono text-xs font-semibold text-[#888888] tracking-[0.2em] uppercase">
-          <span className="w-[3px] h-3.5 bg-[#CCFF00] inline-block"></span>
+          <span className="w-[3px] h-3.5 bg-[#E8FF00] inline-block"></span>
           <span>FREQUENTLY ASKED QUESTIONS</span>
         </div>
 
         <h2 className="text-3xl sm:text-4xl lg:text-[42px] font-extrabold text-[#0A0A0A] tracking-tight leading-tight">
           Everything you need to know about{' '}
-          <span className="bg-[#CCFF00] text-[#0A0A0A] px-3 py-0.5 rounded-md inline-block font-extrabold">
+          <span className="bg-[#E8FF00] text-[#0A0A0A] px-3 py-0.5 rounded-md inline-block font-extrabold">
             prepKit.
           </span>
         </h2>
@@ -109,7 +109,7 @@ export function FaqSection() {
                 {/* ACCORDION ICON */}
                 <div className={`w-8 h-8 rounded-xl flex items-center justify-center shrink-0 transition-all ${
                   isOpen 
-                    ? 'bg-[#0A0A0A] text-[#CCFF00]' 
+                    ? 'bg-[#0A0A0A] text-[#E8FF00]' 
                     : 'bg-[#F4F4F0] text-[#0A0A0A]'
                 }`}>
                   {isOpen ? (

@@ -89,17 +89,25 @@ export class KitController {
 
       const kits = await KitModel.find({ userId: req.user.id }).sort({ createdAt: -1 });
 
-      const responseKits = kits.map(k => ({
-        id: k._id.toString(),
-        company: k.data?.source?.company || k.companyUrl,
-        role: k.data?.source?.role || 'Role',
-        daysAvailable: k.daysAvailable,
-        status: k.status,
-        stepMessage: k.stepMessage,
-        progressPercent: k.progressPercent,
-        coveragePercent: k.data?.coverage ? Math.round(((k.data.role.requirements.filter(r => r.priority === 'must').length - k.data.coverage.uncovered_requirement_ids.length) / Math.max(1, k.data.role.requirements.filter(r => r.priority === 'must').length)) * 100) : 0,
-        createdAt: k.createdAt
-      }));
+      const responseKits = kits.map(k => {
+        const scheduleDays = k.data?.schedule?.days || [];
+        const completedDaysCount = scheduleDays.filter((d: any) => d.isCompleted).length;
+        const totalDaysCount = scheduleDays.length || k.daysAvailable;
+
+        return {
+          id: k._id.toString(),
+          company: k.data?.source?.company || k.companyUrl,
+          role: k.data?.source?.role || 'Role',
+          daysAvailable: k.daysAvailable,
+          status: k.status,
+          stepMessage: k.stepMessage,
+          progressPercent: k.progressPercent,
+          completedDaysCount,
+          totalDaysCount,
+          coveragePercent: k.data?.coverage ? Math.round(((k.data.role.requirements.filter((r: any) => r.priority === 'must').length - k.data.coverage.uncovered_requirement_ids.length) / Math.max(1, k.data.role.requirements.filter((r: any) => r.priority === 'must').length)) * 100) : 0,
+          createdAt: k.createdAt
+        };
+      });
 
       return res.status(200).json({ kits: responseKits });
     } catch (error: any) {
@@ -140,6 +148,7 @@ export class KitController {
       }
 
       kit.data = req.body.data;
+      kit.markModified('data');
       await kit.save();
 
       return res.status(200).json({ status: 'ok', data: kit.data });

@@ -37,6 +37,7 @@ export interface ScheduleDay {
   focus: string;
   question_ids: string[];
   minutes: number;
+  isCompleted?: boolean;
 }
 
 export interface Schedule {

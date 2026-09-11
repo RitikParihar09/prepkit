@@ -583,7 +583,13 @@ export default function KitDetailPage() {
 
       {/* 6. SCHEDULE TAB */}
       {activeTab === 'schedule' && (
-        <ScheduleTimeline schedule={kitData.schedule} questions={kitData.questions} />
+        <ScheduleTimeline 
+          schedule={kitData.schedule} 
+          questions={kitData.questions} 
+          kitId={kitId}
+          kitData={kitData}
+          onUpdateKitData={setKitData}
+        />
       )}
 
       {/* 7. COVERAGE TAB */}

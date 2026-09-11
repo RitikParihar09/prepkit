@@ -2,10 +2,9 @@
 
 import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
-import { useAuth } from '@/lib/authContext';
 import { ArrowRight, Play, FileText, Target, Calendar, Zap, CheckCircle2, Check, ArrowUpRight } from 'lucide-react';
-import { CtaBanner } from '@/components/CtaBanner';
 import { FaqSection } from '@/components/FaqSection';
+import { CtaBanner } from '@/components/CtaBanner';
 
 const HERO_ANIMATED_STEPS = [
   'Analyzing your job post...',
@@ -25,8 +24,6 @@ const HERO_SAMPLE_ROLES = [
 ];
 
 export default function LandingPage() {
-  const { user } = useAuth();
-
   // Animated Hero AI Execution Steps Loop State
   const [activeHeroStepIndex, setActiveHeroStepIndex] = useState(0);
   const [currentRoleIndex, setCurrentRoleIndex] = useState(0);
@@ -86,7 +83,7 @@ export default function LandingPage() {
             {/* Buttons */}
             <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-4 pt-2">
               <Link
-                href={user ? "/kits/new" : "/register"}
+                href="/kits/new"
                 className="bg-[#0A0A0A] hover:bg-[#222222] text-white text-sm font-semibold py-3.5 px-6 rounded-lg transition-all flex items-center justify-center gap-2 shadow-sm"
               >
                 <span>Create your prep kit</span>
@@ -94,8 +91,8 @@ export default function LandingPage() {
               </Link>
 
               <Link
-                href={user ? "/dashboard" : "/login"}
-                className="bg-white hover:bg-[#F0F0EC] text-[#0A0A0A] border border-[#CCCCCC] text-sm font-semibold py-3.5 px-6 rounded-lg transition-all flex items-center justify-center gap-2"
+                href="/dashboard"
+                className="bg-[#FFFFFF] hover:bg-[#F0F0EC] text-[#0A0A0A] border border-[#CCCCCC] text-sm font-semibold py-3.5 px-6 rounded-lg transition-all flex items-center justify-center gap-2"
               >
                 <Play className="w-3.5 h-3.5 fill-current" />
                 <span>See how it works</span>

@@ -47,7 +47,8 @@ export const ScheduleDaySchema = z.object({
   day: z.number().int().min(1),
   focus: z.string().min(1, 'Day focus title is required'),
   question_ids: z.array(z.string()),
-  minutes: z.number().int().min(1, 'Minutes must be a positive integer')
+  minutes: z.number().int().min(1, 'Minutes must be a positive integer'),
+  isCompleted: z.boolean().optional()
 });
 
 export const ScheduleSchema = z.object({

@@ -2,12 +2,19 @@
 
 import { useState } from 'react';
 import Link from 'next/link';
+import { usePathname } from 'next/navigation';
 import { useAuth } from '@/lib/authContext';
 import { ArrowRight, LogOut, User as UserIcon, AlertCircle } from 'lucide-react';
 
 export function Navbar() {
+  const pathname = usePathname();
   const { user, logout } = useAuth();
   const [showLogoutConfirm, setShowLogoutConfirm] = useState(false);
+
+  // Hide top navigation bar during fullscreen practice mode
+  if (pathname?.endsWith('/practice')) {
+    return null;
+  }
 
   const displayName = user?.name || (user?.email ? user.email.split('@')[0] : 'User');
 
@@ -23,12 +30,9 @@ export function Navbar() {
           
           {/* Brand Logo */}
           <div className="flex items-center gap-10">
-            <Link href="/" className="font-bold text-xl text-[#0A0A0A] tracking-tight hover:opacity-90 transition-opacity flex items-center gap-1">
-              <span className="font-extrabold">prep</span>
-              <span className="font-extrabold relative">
-                Kit
-                <span className="absolute -bottom-1 left-0 w-full h-[3px] bg-[#E8FF00]"></span>
-              </span>
+            <Link href="/" className="font-extrabold text-2xl tracking-tighter hover:opacity-95 transition-opacity flex items-center bg-[#111317] px-3.5 py-1.5 rounded-lg shadow-sm">
+              <span className="text-white font-extrabold text-2xl tracking-tight">prep</span>
+              <span className="text-[#E8FF00] font-extrabold text-2xl tracking-tight">Kit</span>
             </Link>
           </div>
 

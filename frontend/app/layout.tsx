@@ -18,6 +18,11 @@ const geistMono = Geist_Mono({
 export const metadata: Metadata = {
   title: 'prepKit | Research-Backed Personal Preparation',
   description: 'Turn any job description into a personalized interview preparation kit with company research, targeted questions, flashcards, and a day-by-day study plan.',
+  icons: {
+    icon: '/icon.svg',
+    shortcut: '/icon.svg',
+    apple: '/icon.svg',
+  },
 };
 
 export default function RootLayout({

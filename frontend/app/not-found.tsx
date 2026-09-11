@@ -5,7 +5,7 @@ import { ArrowRight, Home, LayoutDashboard, PlusCircle, Compass } from 'lucide-r
 
 export default function NotFound() {
   return (
-    <div className="min-h-[calc(100vh-4rem)] bg-[#FBFBF8] text-[#0A0A0A] font-sans selection:bg-[#CCFF00] selection:text-black flex flex-col items-center justify-center relative overflow-hidden py-16 px-4 sm:px-6 lg:px-8 select-none">
+    <div className="min-h-[calc(100vh-4rem)] bg-[#FBFBF8] text-[#0A0A0A] font-sans selection:bg-[#E8FF00] selection:text-black flex flex-col items-center justify-center relative overflow-hidden py-16 px-4 sm:px-6 lg:px-8 select-none">
       
       {/* Technical Grid Overlay */}
       <div 
@@ -23,21 +23,21 @@ export default function NotFound() {
         
         {/* Monospace Error Tag Header */}
         <div className="inline-flex items-center gap-2 font-mono text-xs font-semibold text-[#777777] tracking-[0.2em] uppercase bg-white border border-[#E5E5E0] px-3.5 py-1.5 rounded-full shadow-2xs">
-          <span className="w-2 h-2 rounded-full bg-[#CCFF00] animate-pulse"></span>
+          <span className="w-2 h-2 rounded-full bg-[#E8FF00] animate-pulse"></span>
           <span>404 · PAGE NOT FOUND</span>
         </div>
 
         {/* Big Stylized 404 Hero Display */}
         <div className="relative inline-block my-2">
           {/* Background Lime Glow Square */}
-          <div className="absolute inset-0 bg-[#CCFF00] rounded-3xl blur-xl opacity-50 transform -rotate-3"></div>
+          <div className="absolute inset-0 bg-[#E8FF00] rounded-3xl blur-xl opacity-50 transform -rotate-3"></div>
 
           <div className="relative bg-[#0A0A0A] text-white px-8 sm:px-12 py-6 sm:py-8 rounded-3xl border-2 border-black shadow-2xl flex items-center justify-center gap-4">
             <span className="font-mono text-6xl sm:text-8xl font-extrabold tracking-tighter text-white">
               404
             </span>
             <div className="h-12 sm:h-16 w-[2px] bg-[#333333]"></div>
-            <div className="text-left font-mono text-xs sm:text-sm text-[#CCFF00] leading-tight space-y-1">
+            <div className="text-left font-mono text-xs sm:text-sm text-[#E8FF00] leading-tight space-y-1">
               <div>ROUTE_NOT_FOUND</div>
               <div className="text-[#888888] font-normal text-[10px]">ERR_INVALID_PATH</div>
             </div>
@@ -74,7 +74,7 @@ export default function NotFound() {
 
           <Link
             href="/kits/new"
-            className="bg-[#CCFF00] hover:bg-[#b8e600] text-black font-extrabold text-xs sm:text-sm py-3.5 px-6 rounded-xl transition-all flex items-center justify-center gap-2 shadow-sm"
+            className="bg-[#E8FF00] hover:bg-[#b8e600] text-black font-extrabold text-xs sm:text-sm py-3.5 px-6 rounded-xl transition-all flex items-center justify-center gap-2 shadow-sm"
           >
             <PlusCircle className="w-4 h-4 text-black" />
             <span>Create Kit</span>

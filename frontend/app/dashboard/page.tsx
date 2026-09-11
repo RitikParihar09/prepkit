@@ -16,6 +16,8 @@ interface KitSummary {
   stepMessage: string;
   progressPercent: number;
   coveragePercent: number;
+  completedDaysCount?: number;
+  totalDaysCount?: number;
   createdAt: string;
 }
 
@@ -240,9 +242,9 @@ export default function DashboardPage() {
                     <span className="font-bold text-[#0A0A0A]">{String(kit.daysAvailable).padStart(2, '0')} DAYS</span>
                   </div>
                   <div>
-                    <span className="text-[10px] text-[#888888] uppercase block mb-1">MATCH SCORE</span>
+                    <span className="text-[10px] text-[#888888] uppercase block mb-1">SCHEDULE PROGRESS</span>
                     <span className="inline-block bg-[#E8FF00] text-black font-bold px-2 py-0.5 border border-black/10 rounded">
-                      {kit.coveragePercent}% MATCH
+                      {kit.completedDaysCount || 0} / {kit.totalDaysCount || kit.daysAvailable} COMPLETED
                     </span>
                   </div>
                 </div>
