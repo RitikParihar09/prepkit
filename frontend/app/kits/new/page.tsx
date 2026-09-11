@@ -178,254 +178,349 @@ export default function CreateKitPage() {
   };
 
   // =========================================================================
-  // IF GENERATING KIT (isSubmitting === true): Exact Reference Design View
+  // IF GENERATING KIT (isSubmitting === true): Agentic Live Research UI
   // =========================================================================
   if (isSubmitting) {
+    // Derive dynamic sub-step states based on progressPercent
+    const targetHost = companyUrl ? new URL(companyUrl).hostname.replace(/^www\./, '') : 'acme.com';
+    const baseUrlFormatted = companyUrl || `https://www.${targetHost}`;
+
+    // Live terminal log entries generated dynamically
+    const logEntries = [
+      { text: `> Initializing autonomous web crawler for ${targetHost} ...`, time: '10:24:10' },
+      { text: `> Fetching ${baseUrlFormatted} ...`, time: '10:24:12' },
+      { text: `> Parsing HTML content & extracting metadata (342 KB)`, time: '10:24:13' },
+      { text: `> Discovering high-priority links: /careers, /jobs, /engineering`, time: '10:24:14' },
+      { text: `> Crawling ${baseUrlFormatted}/careers ...`, time: '10:24:16' },
+      { text: `> Found open positions & core engineering requirements`, time: '10:24:18' },
+      { text: `> Searching LeetCode & Reddit for real ${targetHost} interview questions`, time: '10:24:20' },
+      { text: `> Synthesizing technical questions & active recall flashcards`, time: '10:24:22' },
+      { text: `> Building deterministic day-by-day study roadmap`, time: '10:24:25' }
+    ];
+
+    const activeLogsCount = Math.min(logEntries.length, Math.max(3, Math.floor((progressPercent / 100) * logEntries.length)));
+    const currentVisibleLogs = logEntries.slice(0, activeLogsCount);
+
     return (
-      <div className="min-h-screen bg-[#F9F9F6] text-[#0A0A0A] font-sans selection:bg-[#CCFF00] selection:text-black select-none relative overflow-hidden py-12 px-4 sm:px-6 lg:px-8 flex flex-col justify-center items-center">
+      <div className="min-h-screen bg-[#F9F9F6] text-[#0A0A0A] font-sans selection:bg-[#CCFF00] selection:text-black select-none relative overflow-hidden py-8 px-4 sm:px-6 lg:px-8 animate-in fade-in zoom-in-95 duration-500">
         
-        {/* Fine Technical Grid Overlay */}
+        {/* Technical Fine Grid Background */}
         <div 
           className="absolute inset-0 pointer-events-none opacity-40"
           style={{
             backgroundImage: `
-              linear-gradient(to right, rgba(0, 0, 0, 0.035) 1px, transparent 1px),
-              linear-gradient(to bottom, rgba(0, 0, 0, 0.035) 1px, transparent 1px)
+              linear-gradient(to right, rgba(0, 0, 0, 0.04) 1px, transparent 1px),
+              linear-gradient(to bottom, rgba(0, 0, 0, 0.04) 1px, transparent 1px)
             `,
-            backgroundSize: '40px 40px'
+            backgroundSize: '32px 32px'
           }}
         ></div>
 
-        <div className="max-w-[1360px] w-full mx-auto relative z-10">
+        <div className="max-w-[1340px] w-full mx-auto relative z-10 space-y-6">
           
-          {/* TOP HEADER BADGE */}
-          <div className="text-center mb-4">
-            <div className="inline-flex items-center gap-2 font-mono text-xs font-semibold text-[#888888] tracking-[0.2em] uppercase">
-              <span className="w-[3px] h-3.5 bg-[#CCFF00] inline-block"></span>
-              <span>BUILDING YOUR ADVANTAGE</span>
+          {/* HEADER STRIP */}
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-[#E5E5DF] pb-4">
+            <div className="space-y-1">
+              <div className="flex items-center gap-2 font-mono text-[10px] sm:text-xs font-bold text-[#888888] uppercase tracking-[0.2em]">
+                <span className="w-1 h-3.5 bg-[#CCFF00] inline-block"></span>
+                <span>TURNING INFORMATION INTO OPPORTUNITIES</span>
+              </div>
+              <h1 className="text-2xl sm:text-4xl font-extrabold text-[#0A0A0A] tracking-tight">
+                Generating your prep kit...
+              </h1>
+              <p className="text-xs sm:text-sm text-[#666666] leading-relaxed max-w-2xl">
+                Our AI is researching the company, analyzing requirements, and creating a personalized study plan. This usually takes 1–2 minutes.
+              </p>
+            </div>
+
+            {/* Top Right Tagline Badge */}
+            <div className="hidden md:flex items-center gap-2 bg-white border border-[#E5E5DF] px-4 py-2 rounded-xl text-right shrink-0 shadow-2xs">
+              <div className="space-y-0.5 font-mono text-[10px] font-bold text-[#888888] leading-tight uppercase tracking-wider">
+                <div>REAL RESEARCH</div>
+                <div className="text-[#0A0A0A]">REAL PREPARATION</div>
+              </div>
+              <div className="w-1 h-7 bg-[#CCFF00] rounded-full"></div>
             </div>
           </div>
 
-          {/* MAIN HEADING & SUBTITLE */}
-          <div className="text-center max-w-2xl mx-auto space-y-3 mb-10">
-            <h1 className="text-3xl sm:text-4xl lg:text-[42px] font-extrabold text-[#0A0A0A] tracking-tight leading-tight">
-              Generating your prep kit...
-            </h1>
-            <p className="text-xs sm:text-sm text-[#666666] leading-relaxed max-w-xl mx-auto">
-              Our AI is researching the company, analyzing requirements, and creating a personalized study plan. This usually takes 1–2 minutes.
-            </p>
-          </div>
-
-          {/* CENTER GRID CONTAINER (Left Decor + 5 Steps List + Right Decor) */}
-          <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-center max-w-5xl mx-auto">
+          {/* MAIN 3-COLUMN LAYOUT */}
+          <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
             
-            {/* LEFT FLOATING DECOR CARD (Visible on LG) */}
-            <div className="hidden lg:flex lg:col-span-3 flex-col justify-between items-start h-full min-h-[360px] relative">
+            {/* COLUMN 1: LEFT VERTICAL TIMELINE STEPPER (3 Cols) */}
+            <div className="lg:col-span-3 space-y-6">
               
-              {/* Stacked Floating Brand Cards */}
-              <div className="relative w-48 h-48 mt-4">
-                {/* Yellow Glow Accent Box */}
-                <div className="absolute top-10 left-2 w-24 h-24 bg-[#CCFF00] rounded-2xl opacity-90 blur-xs"></div>
+              <div className="bg-white/80 backdrop-blur-sm border border-[#E5E5DF] rounded-2xl p-5 shadow-sm space-y-5 relative">
+                <div className="absolute left-[27px] top-9 bottom-9 w-[2px] bg-[#EAEAE5] z-0"></div>
 
-                {/* Notion Card */}
-                <div className="absolute top-0 left-6 bg-white p-3.5 rounded-2xl shadow-lg border border-[#E5E7EB] z-20 hover:scale-105 transition-transform">
-                  <div className="w-9 h-9 rounded-xl bg-black text-white font-extrabold flex items-center justify-center text-lg font-serif">
-                    N
-                  </div>
-                </div>
+                {FIVE_GENERATION_STEPS.map((step, idx) => {
+                  const status = getStepStatus(idx);
+                  const isCompleted = status === 'Completed';
+                  const isInProgress = status === 'In progress';
 
-                {/* Figma Card */}
-                <div className="absolute top-8 left-24 bg-white p-3.5 rounded-2xl shadow-lg border border-[#E5E7EB] z-20 hover:scale-105 transition-transform">
-                  <div className="w-9 h-9 rounded-xl bg-[#0A0A0A] flex items-center justify-center p-1.5">
-                    <svg className="w-6 h-6" viewBox="0 0 38 57" fill="none">
-                      <path d="M19 28.5C19 23.2533 23.2533 19 28.5 19C33.7467 19 38 23.2533 38 28.5C38 33.7467 33.7467 38 28.5 38H19V28.5Z" fill="#FF7262"/>
-                      <path d="M0 47.5C0 42.2533 4.25329 38 9.5 38H19V47.5C19 52.7467 14.7467 57 9.5 57C4.25329 57 0 52.7467 0 47.5Z" fill="#0ACF83"/>
-                      <path d="M19 0V19H28.5C33.7467 19 38 14.7467 38 9.5C38 4.25329 33.7467 0 28.5 0H19Z" fill="#1ABCFE"/>
-                      <path d="M0 9.5C0 14.7467 4.25329 19 9.5 19H19V0H9.5C4.25329 0 0 4.25329 0 9.5Z" fill="#F24E1E"/>
-                      <path d="M0 28.5C0 33.7467 4.25329 38 9.5 38H19V19H9.5C4.25329 19 0 23.2533 0 28.5Z" fill="#A259FF"/>
-                    </svg>
-                  </div>
-                </div>
-
-                {/* Google Card */}
-                <div className="absolute top-24 left-14 bg-white p-3.5 rounded-2xl shadow-xl border border-[#E5E7EB] z-30 hover:scale-105 transition-transform">
-                  <div className="w-9 h-9 rounded-xl bg-white border border-black/5 flex items-center justify-center">
-                    <svg className="w-5 h-5" viewBox="0 0 24 24">
-                      <path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" fill="#4285F4"/>
-                      <path d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" fill="#34A853"/>
-                      <path d="M5.84 14.1c-.22-.66-.35-1.36-.35-2.1s.13-1.44.35-2.1V7.06H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.94l2.85-2.22.81-.62z" fill="#FBBC05"/>
-                      <path d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.06l3.66 2.84c.87-2.6 3.3-4.52 6.16-4.52z" fill="#EA4335"/>
-                    </svg>
-                  </div>
-                </div>
-              </div>
-
-              {/* Vertical Label & Accent Line */}
-              <div className="space-y-1.5 pt-6">
-                <div className="font-mono text-[10px] font-bold text-[#8A92A6] uppercase tracking-[0.18em] leading-tight">
-                  REAL<br />
-                  COMPANIES<br />
-                  REAL<br />
-                  QUESTIONS
-                </div>
-                <div className="w-5 h-[2px] bg-[#CCFF00]"></div>
-              </div>
-
-            </div>
-
-            {/* CENTER 5-STEP VERTICAL TIMELINE LIST */}
-            <div className="lg:col-span-6 space-y-6 relative py-2">
-              
-              {/* Vertical Timeline Connection Line */}
-              <div className="absolute left-[19px] top-6 bottom-8 w-[2px] bg-[#E5E7EB] z-0"></div>
-
-              {FIVE_GENERATION_STEPS.map((step, idx) => {
-                const status = getStepStatus(idx);
-                const isCompleted = status === 'Completed';
-                const isInProgress = status === 'In progress';
-
-                return (
-                  <div key={step.id} className="relative z-10 flex items-center justify-between gap-4">
-                    
-                    {/* Left Icon Node & Text */}
-                    <div className="flex items-center gap-4 min-w-0">
-                      
-                      {/* Step Circle Icon */}
-                      <div className={`w-10 h-10 rounded-full flex items-center justify-center shrink-0 transition-all ${
-                        isCompleted
-                          ? 'bg-[#E8FF00] text-black shadow-xs'
-                          : isInProgress
-                          ? 'bg-white border-2 border-[#CCFF00] text-[#0A0A0A] shadow-[0_0_12px_rgba(204,255,0,0.6)]'
-                          : 'bg-white border-2 border-[#D1D5DB] text-transparent'
-                      }`}>
-                        {isCompleted ? (
-                          <Check className="w-5 h-5 text-black stroke-[3]" />
-                        ) : isInProgress ? (
-                          <div className="w-3.5 h-3.5 rounded-full bg-[#CCFF00] animate-pulse"></div>
-                        ) : null}
-                      </div>
-
-                      {/* Title & Description */}
-                      <div className="min-w-0">
-                        <h4 className={`text-sm font-bold leading-tight ${
-                          isInProgress || isCompleted ? 'text-[#0A0A0A]' : 'text-[#6B7280]'
+                  return (
+                    <div key={step.id} className="relative z-10 flex items-start justify-between gap-3">
+                      <div className="flex items-start gap-3 min-w-0">
+                        {/* Circle Indicator */}
+                        <div className={`w-7 h-7 rounded-full flex items-center justify-center shrink-0 mt-0.5 transition-all ${
+                          isCompleted
+                            ? 'bg-[#E8FF00] text-black shadow-xs'
+                            : isInProgress
+                            ? 'bg-white border-2 border-[#CCFF00] text-[#0A0A0A] shadow-[0_0_10px_rgba(204,255,0,0.6)] animate-pulse'
+                            : 'bg-white border-2 border-[#D1D5DB]'
                         }`}>
-                          {step.title}
-                        </h4>
-                        <p className="text-xs text-[#8A92A6] truncate mt-0.5">
-                          {step.description}
-                        </p>
+                          {isCompleted ? (
+                            <Check className="w-4 h-4 text-black stroke-[3]" />
+                          ) : isInProgress ? (
+                            <div className="w-2.5 h-2.5 rounded-full bg-[#CCFF00]"></div>
+                          ) : null}
+                        </div>
+
+                        {/* Title & Desc */}
+                        <div className="min-w-0">
+                          <h4 className={`text-xs font-bold leading-snug ${
+                            isInProgress || isCompleted ? 'text-[#0A0A0A]' : 'text-[#888888]'
+                          }`}>
+                            {idx + 1}. {step.title}
+                          </h4>
+                          <p className="text-[10px] text-[#8A92A6] leading-normal line-clamp-2 mt-0.5">
+                            {step.description}
+                          </p>
+                        </div>
+                      </div>
+
+                      {/* Right Status badge */}
+                      <div className="shrink-0 text-right font-mono text-[10px]">
+                        {isCompleted && <span className="text-[#888888]">12s</span>}
+                        {isInProgress && <span className="text-[#88B800] font-bold">In progress</span>}
+                        {status === 'Pending' && <span className="text-[#B0B0B0]">Pending</span>}
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+
+              {/* Bottom Notice Pill & Cancel Button */}
+              <div className="space-y-3 text-center">
+                <div className="flex items-center gap-2.5 bg-[#F0F1EC] border border-[#E5E5DF] rounded-2xl p-3.5 text-[11px] text-[#555555]">
+                  <Clock className="w-4 h-4 text-[#0A0A0A] shrink-0" />
+                  <span className="text-left leading-tight">
+                    This usually takes 1–2 minutes. You can safely leave this page — we'll notify you when it's ready.
+                  </span>
+                </div>
+
+                <button
+                  onClick={handleCancelGeneration}
+                  className="w-full bg-white hover:bg-[#F4F4EE] text-[#0A0A0A] border border-[#D0D0CA] text-xs font-semibold py-2.5 px-4 rounded-xl transition-all shadow-2xs font-mono uppercase tracking-wider"
+                >
+                  Cancel Generation
+                </button>
+              </div>
+
+            </div>
+
+            {/* COLUMN 2: CENTER LIVE CRAWLING PROGRESS & REAL-TIME LOGS (6 Cols) */}
+            <div className="lg:col-span-6 bg-white border border-[#E5E5DF] rounded-2xl p-6 shadow-sm space-y-6">
+              
+              {/* Header Strip */}
+              <div className="flex items-center justify-between pb-3 border-b border-[#F0F0EA] font-mono text-xs">
+                <div className="flex items-center gap-2 text-[#888888]">
+                  <span className="w-1 h-3 bg-[#CCFF00] inline-block"></span>
+                  <span className="font-bold text-[#0A0A0A] uppercase tracking-wider text-[11px]">LIVE PROGRESS</span>
+                </div>
+                <div className="flex items-center gap-1.5 text-[10px] text-[#555555]">
+                  <span className="w-2 h-2 rounded-full bg-[#CCFF00] animate-ping"></span>
+                  <span>Fetching data in real-time...</span>
+                </div>
+              </div>
+
+              {/* Sub-Header Title */}
+              <div className="space-y-1">
+                <h3 className="text-base sm:text-lg font-extrabold text-[#0A0A0A] tracking-tight">
+                  Crawling company information...
+                </h3>
+                <p className="text-xs text-[#666666] leading-relaxed">
+                  We're analyzing multiple sources to get the most accurate and up-to-date information about this company.
+                </p>
+              </div>
+
+              {/* Crawling Sub-Items Checklist */}
+              <div className="space-y-3 font-sans text-xs">
+                {[
+                  {
+                    title: 'Visiting company website',
+                    url: `${baseUrlFormatted}`,
+                    status: progressPercent >= 25 ? 'Completed' : 'Extracting...',
+                    isDone: progressPercent >= 25
+                  },
+                  {
+                    title: 'Crawling careers page',
+                    url: `${baseUrlFormatted}/careers`,
+                    status: progressPercent >= 45 ? 'Completed' : progressPercent >= 25 ? 'Extracting...' : 'Pending',
+                    isDone: progressPercent >= 45
+                  },
+                  {
+                    title: 'Analyzing about & engineering page',
+                    url: `${baseUrlFormatted}/about`,
+                    status: progressPercent >= 65 ? 'Completed' : progressPercent >= 45 ? 'Extracting...' : 'Pending',
+                    isDone: progressPercent >= 65
+                  },
+                  {
+                    title: 'Reading recent news & tech blogs',
+                    url: 'TechCrunch, LinkedIn, Glassdoor...',
+                    status: progressPercent >= 75 ? 'Completed' : progressPercent >= 65 ? 'Extracting...' : 'Pending',
+                    isDone: progressPercent >= 75
+                  },
+                  {
+                    title: 'Gathering tech stack information',
+                    url: 'Detecting technologies and tools',
+                    status: progressPercent >= 85 ? 'Completed' : progressPercent >= 75 ? 'Extracting...' : 'Pending',
+                    isDone: progressPercent >= 85
+                  },
+                  {
+                    title: 'Extracting company culture & values',
+                    url: 'Mission, values, work environment',
+                    status: progressPercent >= 90 ? 'Completed' : progressPercent >= 85 ? 'Extracting...' : 'Pending',
+                    isDone: progressPercent >= 90
+                  },
+                  {
+                    title: 'Analyzing interview patterns',
+                    url: 'From LeetCode, Reddit & public forums',
+                    status: progressPercent >= 95 ? 'Completed' : progressPercent >= 90 ? 'Extracting...' : 'Pending',
+                    isDone: progressPercent >= 95
+                  }
+                ].map((item, i) => (
+                  <div key={i} className="flex items-center justify-between gap-3 p-2.5 rounded-xl hover:bg-[#F9F9F6] transition-colors">
+                    <div className="flex items-center gap-3 min-w-0">
+                      <div className={`w-5 h-5 rounded-full flex items-center justify-center shrink-0 font-bold text-[10px] ${
+                        item.isDone
+                          ? 'bg-[#CCFF00] text-black'
+                          : item.status === 'Extracting...'
+                          ? 'border-2 border-[#CCFF00] bg-white text-[#0A0A0A]'
+                          : 'border border-[#D1D5DB] text-[#AAAAAA]'
+                      }`}>
+                        {item.isDone ? <Check className="w-3.5 h-3.5 stroke-[3]" /> : '◯'}
+                      </div>
+                      <div className="min-w-0">
+                        <div className="font-bold text-[#0A0A0A] truncate">{item.title}</div>
+                        <div className="text-[10px] text-[#888888] font-mono truncate">{item.url}</div>
                       </div>
                     </div>
 
-                    {/* Right Status Badge */}
-                    <div className="shrink-0 text-right font-mono text-xs">
-                      {isCompleted && (
-                        <span className="text-[#8A92A6]">Completed</span>
-                      )}
-                      {isInProgress && (
-                        <span className="text-[#99D600] font-bold">In progress</span>
-                      )}
-                      {status === 'Pending' && (
-                        <span className="text-[#9CA3AF]">Pending</span>
-                      )}
+                    <div className="shrink-0 font-mono text-[10px]">
+                      {item.isDone && <span className="text-[#88B800] font-bold uppercase">Completed</span>}
+                      {item.status === 'Extracting...' && <span className="text-[#99D600] font-bold uppercase animate-pulse">Extracting...</span>}
+                      {item.status === 'Pending' && <span className="text-[#AAAAAA] uppercase">Pending</span>}
                     </div>
-
                   </div>
-                );
-              })}
+                ))}
+              </div>
+
+              {/* Real-time Logs Console Box */}
+              <div className="bg-[#12141A] text-white rounded-xl p-4 font-mono text-[11px] space-y-2 border border-[#222530] shadow-inner">
+                <div className="flex items-center justify-between text-[10px] text-[#8A95A5] border-b border-[#222530] pb-2 uppercase tracking-wider">
+                  <div className="flex items-center gap-2">
+                    <span className="w-2 h-2 rounded-full bg-[#CCFF00]"></span>
+                    <span>REAL-TIME LOGS</span>
+                  </div>
+                  <span className="text-[#CCFF00] font-bold">● LIVE</span>
+                </div>
+                <div className="space-y-1 max-h-36 overflow-y-auto scrollbar-thin">
+                  {currentVisibleLogs.map((log, index) => (
+                    <div key={index} className="flex items-center justify-between gap-4 text-[#C5CBD8]">
+                      <span className="truncate">{log.text}</span>
+                      <span className="text-[10px] text-[#6A7282] shrink-0">{log.time}</span>
+                    </div>
+                  ))}
+                </div>
+              </div>
 
             </div>
 
-            {/* RIGHT FLOATING DECOR CARD (Visible on LG) */}
-            <div className="hidden lg:flex lg:col-span-3 flex-col justify-between items-end h-full min-h-[360px] relative">
+            {/* COLUMN 3: RIGHT PANEL - SOURCES (6) & DATA EXTRACTING & WHY MATTERS (3 Cols) */}
+            <div className="lg:col-span-3 space-y-5">
               
-              {/* Floating Company Preview Card */}
-              <div className="relative w-full max-w-[210px] bg-white rounded-2xl p-4 shadow-xl border border-[#E5E7EB] mt-2 space-y-3">
-                
-                {/* Floating Globe Badge */}
-                <div className="absolute -top-4 -right-3 w-11 h-11 rounded-2xl bg-white shadow-lg border border-[#E5E7EB] flex items-center justify-center">
-                  <Globe className="w-5 h-5 text-[#0A0A0A]" />
+              {/* SOURCES CARD */}
+              <div className="bg-white border border-[#E5E5DF] rounded-2xl p-4 shadow-sm space-y-3">
+                <div className="font-mono text-[10px] font-bold text-[#888888] uppercase tracking-wider pb-1 border-b border-[#F0F0EA]">
+                  SOURCES (6)
                 </div>
 
-                <div className="space-y-1">
-                  <div className="font-mono text-[11px] font-bold text-[#0A0A0A]">
-                    Analyzing company...
-                  </div>
-                  <div className="w-16 h-1.5 bg-[#E5E7EB] rounded-full"></div>
-                </div>
-
-                {/* Sub-items list */}
-                <div className="space-y-2.5 pt-1 text-[11px] font-sans text-[#555555]">
-                  <div className="flex items-center justify-between">
-                    <div className="flex items-center gap-1.5">
-                      <Building2 className="w-3.5 h-3.5 text-[#888888]" />
-                      <span>Company info</span>
+                <div className="space-y-2 font-sans text-xs">
+                  {[
+                    { name: 'Company Website', icon: '🌐', status: progressPercent >= 20 ? 'Done' : 'Scanning' },
+                    { name: 'Careers Page', icon: '💼', status: progressPercent >= 40 ? 'Done' : progressPercent >= 20 ? 'Scanning' : 'Pending' },
+                    { name: 'LinkedIn / Culture', icon: 'in', status: progressPercent >= 60 ? 'Done' : progressPercent >= 40 ? 'Scanning' : 'Pending' },
+                    { name: 'Glassdoor Reviews', icon: 'O', status: progressPercent >= 70 ? 'Done' : progressPercent >= 60 ? 'Scanning' : 'Pending' },
+                    { name: 'TechCrunch / News', icon: 'TC', status: progressPercent >= 80 ? 'Done' : progressPercent >= 70 ? 'Scanning' : 'Pending' },
+                    { name: 'Reddit / LeetCode', icon: '🤖', status: progressPercent >= 90 ? 'Done' : progressPercent >= 80 ? 'Scanning' : 'Pending' }
+                  ].map((s, idx) => (
+                    <div key={idx} className="flex items-center justify-between gap-2 p-1.5 rounded-lg hover:bg-[#F9F9F6]">
+                      <div className="flex items-center gap-2 min-w-0">
+                        <span className="font-mono text-[11px] text-[#666666] w-4 text-center shrink-0">{s.icon}</span>
+                        <span className="font-medium text-[#0A0A0A] text-xs truncate">{s.name}</span>
+                      </div>
+                      <span className={`px-2 py-0.5 rounded-full text-[9px] font-mono font-bold uppercase shrink-0 ${
+                        s.status === 'Done'
+                          ? 'bg-[#E8FF00]/30 text-[#6B8E00] border border-[#CCFF00]/60'
+                          : s.status === 'Scanning'
+                          ? 'bg-amber-100 text-amber-800 border border-amber-300 animate-pulse'
+                          : 'bg-[#F2F2EC] text-[#999999]'
+                      }`}>
+                        {s.status}
+                      </span>
                     </div>
-                    <div className="w-8 h-1 bg-[#E5E7EB] rounded-full"></div>
+                  ))}
+                  <div className="text-[10px] text-[#888888] font-mono pt-1 text-center cursor-pointer hover:text-[#0A0A0A]">
+                    + More sources...
                   </div>
-                  <div className="flex items-center justify-between">
-                    <div className="flex items-center gap-1.5">
-                      <Cpu className="w-3.5 h-3.5 text-[#888888]" />
-                      <span>Tech stack</span>
-                    </div>
-                    <div className="w-10 h-1 bg-[#E5E7EB] rounded-full"></div>
-                  </div>
-                  <div className="flex items-center justify-between">
-                    <div className="flex items-center gap-1.5">
-                      <FileText className="w-3.5 h-3.5 text-[#888888]" />
-                      <span>Recent news</span>
-                    </div>
-                    <div className="w-7 h-1 bg-[#E5E7EB] rounded-full"></div>
-                  </div>
-                  <div className="flex items-center justify-between">
-                    <div className="flex items-center gap-1.5">
-                      <Users className="w-3.5 h-3.5 text-[#888888]" />
-                      <span>Culture & values</span>
-                    </div>
-                    <div className="w-9 h-1 bg-[#E5E7EB] rounded-full"></div>
-                  </div>
-                </div>
-
-              </div>
-
-              {/* Vertical Label & Accent Line */}
-              <div className="space-y-1.5 pt-6 text-right">
-                <div className="font-mono text-[10px] font-bold text-[#8A92A6] uppercase tracking-[0.18em] leading-tight">
-                  FROM<br />
-                  JOB DESCRIPTION<br />
-                  TO CONFIDENCE
-                </div>
-                <div className="flex justify-end">
-                  <div className="w-5 h-[2px] bg-[#CCFF00]"></div>
                 </div>
               </div>
 
-            </div>
+              {/* DATA WE'RE EXTRACTING CARD */}
+              <div className="bg-white border border-[#E5E5DF] rounded-2xl p-4 shadow-sm space-y-3">
+                <div className="font-mono text-[10px] font-bold text-[#888888] uppercase tracking-wider pb-1 border-b border-[#F0F0EA]">
+                  DATA WE'RE EXTRACTING
+                </div>
 
-          </div>
-
-          {/* BOTTOM NOTIFICATION BOX & CANCEL BUTTON */}
-          <div className="mt-10 space-y-5 text-center">
-            
-            {/* Gray Callout Pill */}
-            <div className="inline-flex items-center gap-3 bg-[#F0F1EC] border border-[#E5E5DF] rounded-2xl px-5 py-3 text-xs text-[#555555] max-w-xl mx-auto shadow-2xs">
-              <div className="w-6 h-6 rounded-full bg-white flex items-center justify-center shrink-0 border border-black/5 shadow-2xs">
-                <Clock className="w-3.5 h-3.5 text-[#0A0A0A]" />
+                <div className="space-y-2 font-sans text-xs">
+                  {[
+                    { label: 'Company overview', icon: 'T', isDone: progressPercent >= 30 },
+                    { label: 'Tech stack', icon: '⚙️', isDone: progressPercent >= 50 },
+                    { label: 'Recent news', icon: '📰', isDone: progressPercent >= 70 },
+                    { label: 'Culture & values', icon: '👥', isDone: progressPercent >= 85 },
+                    { label: 'Interview experiences', icon: '💬', isDone: progressPercent >= 92 },
+                    { label: 'Role-specific insights', icon: '💡', isDone: progressPercent >= 98 }
+                  ].map((d, idx) => (
+                    <div key={idx} className="flex items-center justify-between gap-2 p-1.5 rounded-lg hover:bg-[#F9F9F6]">
+                      <div className="flex items-center gap-2 min-w-0">
+                        <span className="font-mono text-xs text-[#666666] shrink-0">{d.icon}</span>
+                        <span className="font-medium text-[#0A0A0A] text-xs truncate">{d.label}</span>
+                      </div>
+                      <span className={`px-2 py-0.5 rounded-full text-[9px] font-mono font-bold uppercase shrink-0 ${
+                        d.isDone
+                          ? 'bg-[#E8FF00]/30 text-[#6B8E00] border border-[#CCFF00]/60'
+                          : progressPercent > idx * 15
+                          ? 'bg-amber-100 text-amber-800 border border-amber-300 animate-pulse'
+                          : 'bg-[#F2F2EC] text-[#999999]'
+                      }`}>
+                        {d.isDone ? 'Extracted' : progressPercent > idx * 15 ? 'In progress' : 'Pending'}
+                      </span>
+                    </div>
+                  ))}
+                </div>
               </div>
-              <span className="text-left leading-relaxed">
-                This usually takes 1–2 minutes. You can safely leave this page — we'll notify you when it's ready.
-              </span>
-            </div>
 
-            {/* Cancel Button */}
-            <div>
-              <button
-                onClick={handleCancelGeneration}
-                className="bg-white hover:bg-[#F9FAFB] text-[#0A0A0A] border border-[#D0D0CA] text-xs font-semibold py-2.5 px-6 rounded-xl transition-all shadow-2xs"
-              >
-                Cancel Generation
-              </button>
+              {/* WHY THIS MATTERS BOX */}
+              <div className="bg-[#F2F6E8] border border-[#D5E5B5] rounded-2xl p-4 space-y-1.5 shadow-2xs">
+                <div className="flex items-center gap-2 font-bold text-xs text-[#0A0A0A]">
+                  <span className="text-[#88B800]">⚡</span>
+                  <span>Why this matters?</span>
+                </div>
+                <p className="text-[11px] text-[#445522] leading-relaxed font-sans">
+                  We gather real, up-to-date information so you get relevant, high-quality questions and a personalized study plan.
+                </p>
+              </div>
+
             </div>
 
           </div>
