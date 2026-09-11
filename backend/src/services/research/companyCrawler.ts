@@ -138,65 +138,99 @@ export class CompanyCrawler {
   }
 
   /**
-   * Searches public web discussion portals (LeetCode Discuss, Reddit, GitHub, Developer Forums)
-   * for actual interview questions asked by the company.
+   * Searches public developer discussion portals (Reddit API, GitHub Interview Repositories, HackerNews API)
+   * for actual interview questions asked by the company without requiring paid API keys.
    */
   static async searchPublicDeveloperDiscussions(companyName: string): Promise<ScrapedPage[]> {
-    if (!companyName || companyName.length < 2) return [];
+    if (!companyName || companyName.length < 2 || companyName.toLowerCase() === 'localhost') return [];
 
     const scrapedDiscussions: ScrapedPage[] = [];
-    const searchTargets = [
-      {
-        source: 'LeetCode & Coding Portals',
-        query: `site:leetcode.com/discuss "${companyName}" interview questions asked`,
-        score: 95
-      },
-      {
-        source: 'Reddit & Tech Forums',
-        query: `site:reddit.com "${companyName}" interview questions asked technical round`,
-        score: 90
-      },
-      {
-        source: 'Developer Blogs & Experience Logs',
-        query: `"${companyName}" software engineer interview experience questions asked`,
-        score: 85
-      }
-    ];
 
-    for (const target of searchTargets) {
-      try {
-        const searchUrl = `https://html.duckduckgo.com/html/?q=${encodeURIComponent(target.query)}`;
-        const searchRes = await axios.get(searchUrl, {
-          timeout: 6000,
-          headers: {
-            'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36'
-          }
-        });
+    // 1. Query Reddit Global Search API (Zero-Key API with Custom Browser User-Agent)
+    try {
+      const redditSearchUrl = `https://www.reddit.com/search.json?q=${encodeURIComponent(companyName + ' interview questions')}&limit=5&sort=relevance`;
+      const redditRes = await axios.get(redditSearchUrl, {
+        timeout: 6000,
+        headers: {
+          'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/122.0.0.0 Safari/537.36'
+        }
+      });
 
-        const $ = cheerio.load(searchRes.data);
+      if (redditRes.data?.data?.children?.length > 0) {
+        const posts = redditRes.data.data.children;
         const items: string[] = [];
 
-        $('.result__body').each((_, el) => {
-          const title = $(el).find('.result__title').text().trim();
-          const snippet = $(el).find('.result__snippet').text().trim();
-
-          if (snippet && snippet.length > 25) {
-            items.push(`${title}: ${snippet}`);
+        for (const post of posts) {
+          const title = post.data?.title;
+          const selftext = post.data?.selftext || '';
+          const permalink = post.data?.permalink ? `https://www.reddit.com${post.data.permalink}` : '';
+          if (title) {
+            const cleanText = selftext.substring(0, 250).replace(/\s+/g, ' ');
+            items.push(`• ${title}${cleanText ? `: ${cleanText}` : ''} (${permalink})`);
           }
-        });
+        }
 
         if (items.length > 0) {
-          const combinedText = items.slice(0, 4).join('\n• ');
           scrapedDiscussions.push({
-            url: `https://duckduckgo.com/?q=${encodeURIComponent(target.query)}`,
-            title: `[REAL INTERVIEW DISCUSSIONS] ${target.source} - ${companyName}`,
-            text: `Public Discussion Excerpts (${target.source}):\n• ${combinedText}`,
-            score: target.score
+            url: `https://www.reddit.com/search/?q=${encodeURIComponent(companyName + ' interview questions')}`,
+            title: `[REDDIT DEVELOPER DISCUSSIONS] ${companyName} Interview Experiences`,
+            text: `Public Developer Interview Experiences (${companyName}):\n${items.join('\n')}`,
+            score: 95
           });
         }
-      } catch (err: any) {
-        console.warn(`[Crawler Warning] Developer discussion search failed for ${target.source} (${companyName}): ${err.message}`);
       }
+    } catch (err: any) {
+      console.warn(`[Crawler Warning] Reddit JSON search failed for ${companyName}: ${err.message}`);
+    }
+
+    // 2. Query GitHub Public Interview Repositories Search API
+    try {
+      const ghSearchUrl = `https://api.github.com/search/repositories?q=${encodeURIComponent(companyName + ' interview questions')}&per_page=4`;
+      const ghRes = await axios.get(ghSearchUrl, {
+        timeout: 6000,
+        headers: {
+          'User-Agent': 'TraoPrepKitBot/1.0',
+          'Accept': 'application/vnd.github.v3+json'
+        }
+      });
+
+      if (ghRes.data?.items?.length > 0) {
+        const repos = ghRes.data.items;
+        const items: string[] = repos.map((repo: any) => 
+          `• ${repo.full_name}: ${repo.description || 'Public technical interview questions & preparation notes'} (${repo.html_url})`
+        );
+
+        scrapedDiscussions.push({
+          url: `https://github.com/search?q=${encodeURIComponent(companyName + ' interview questions')}`,
+          title: `[GITHUB INTERVIEW REPOS] Public ${companyName} Question Sets & Experiences`,
+          text: `Public GitHub Interview Question Repositories (${companyName}):\n${items.join('\n')}`,
+          score: 90
+        });
+      }
+    } catch (err: any) {
+      console.warn(`[Crawler Warning] GitHub Search API failed for ${companyName}: ${err.message}`);
+    }
+
+    // 3. Query HackerNews Algolia Search API
+    try {
+      const hnSearchUrl = `https://hn.algolia.com/api/v1/search?query=${encodeURIComponent(companyName + ' interview')}&tags=story&hitsPerPage=4`;
+      const hnRes = await axios.get(hnSearchUrl, { timeout: 5000 });
+
+      if (hnRes.data?.hits?.length > 0) {
+        const hits = hnRes.data.hits;
+        const items: string[] = hits.map((hit: any) => 
+          `• ${hit.title} (${hit.url || `https://news.ycombinator.com/item?id=${hit.objectID}`})`
+        );
+
+        scrapedDiscussions.push({
+          url: `https://hn.algolia.com/?query=${encodeURIComponent(companyName + ' interview')}`,
+          title: `[HACKERNEWS DISCUSSIONS] ${companyName} Engineering & Hiring Posts`,
+          text: `HackerNews Discussions & Hiring Threads (${companyName}):\n${items.join('\n')}`,
+          score: 85
+        });
+      }
+    } catch (err: any) {
+      console.warn(`[Crawler Warning] HackerNews Algolia Search failed for ${companyName}: ${err.message}`);
     }
 
     return scrapedDiscussions;
@@ -241,10 +275,13 @@ export class CompanyCrawler {
       });
       result.pagesUsed.push(companyUrl);
 
-      // 2. Discover & Rank Internal Links
+      // 2. Discover & Rank Internal Links (Strict Hiring & Culture Filter)
       const $ = cheerio.load(homepageRes.data);
       const linkCandidates: { url: string; score: number; anchorText: string }[] = [];
       const seenUrls = new Set<string>([companyUrl]);
+
+      // Marketing/Noise patterns to discard
+      const noiseRegex = /\/news|\/media|\/press|\/store|\/privacy|\/terms|\/legal|\/cart|\/shop|\/cookie|\/login|\/signup/i;
 
       $('a[href]').each((_, el) => {
         const href = $(el).attr('href');
@@ -257,10 +294,13 @@ export class CompanyCrawler {
           // Resolve relative URL
           const resolved = new URL(href, companyUrl);
           
-          // Ensure link stays within company domain
-          if (resolved.hostname === baseUrlParsed.hostname) {
+          // Support relative URLs & subdomains (e.g. careers.ea.com, jobs.company.com, engineering.company.com)
+          const targetRootDomain = baseUrlParsed.hostname.replace(/^www\./, '').split('.').slice(-2).join('.');
+          const resolvedRootDomain = resolved.hostname.replace(/^www\./, '').split('.').slice(-2).join('.');
+
+          if (resolvedRootDomain === targetRootDomain) {
             const cleanUrl = resolved.origin + resolved.pathname;
-            if (!seenUrls.has(cleanUrl)) {
+            if (!seenUrls.has(cleanUrl) && !noiseRegex.test(resolved.pathname)) {
               seenUrls.add(cleanUrl);
               const score = this.scoreLink(resolved.pathname, anchorText, titleAttr);
               if (score > 0) {
@@ -273,11 +313,23 @@ export class CompanyCrawler {
         }
       });
 
+      // If candidate links have low scores, add standard high-value path fallbacks (e.g. /about, /engineering, /team, /careers)
+      if (linkCandidates.length < 5) {
+        const standardPaths = ['/careers', '/jobs', '/about', '/engineering', '/culture', '/team'];
+        for (const p of standardPaths) {
+          const full = baseUrlParsed.origin + p;
+          if (!seenUrls.has(full)) {
+            seenUrls.add(full);
+            linkCandidates.push({ url: full, score: 15, anchorText: p });
+          }
+        }
+      }
+
       // Sort candidate links by score descending
       linkCandidates.sort((a, b) => b.score - a.score);
 
-      // 3. Fetch Top 3 Promising Subpages (e.g. /careers, /jobs, handbook, engineering blog)
-      const topCandidates = linkCandidates.slice(0, 3);
+      // 3. Fetch Top 6 Promising Subpages (e.g. /careers, /jobs, handbook, engineering blog, about)
+      const topCandidates = linkCandidates.slice(0, 6);
       for (const candidate of topCandidates) {
         try {
           const pageRes = await axios.get(candidate.url, {
@@ -286,13 +338,15 @@ export class CompanyCrawler {
             headers: { 'User-Agent': 'TraoPrepKitBot/1.0 (+https://trao.io)' }
           });
           const pageData = this.cleanHtml(pageRes.data);
-          result.pages.push({
-            url: candidate.url,
-            title: pageData.title,
-            text: pageData.text,
-            score: candidate.score
-          });
-          result.pagesUsed.push(candidate.url);
+          if (pageData.text.length > 50) {
+            result.pages.push({
+              url: candidate.url,
+              title: pageData.title,
+              text: pageData.text,
+              score: candidate.score
+            });
+            result.pagesUsed.push(candidate.url);
+          }
         } catch (pageError: any) {
           console.warn(`[Crawler Warning] Failed to fetch subpage ${candidate.url}: ${pageError.message}`);
         }

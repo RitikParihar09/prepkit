@@ -343,50 +343,38 @@ export default function CreateKitPage() {
                 </p>
               </div>
 
-              {/* Crawling Sub-Items Checklist */}
+              {/* Real Progress Checklist */}
               <div className="space-y-3 font-sans text-xs">
                 {[
                   {
-                    title: 'Visiting company website',
+                    title: 'Connecting to target website',
                     url: `${baseUrlFormatted}`,
-                    status: progressPercent >= 25 ? 'Completed' : 'Extracting...',
-                    isDone: progressPercent >= 25
+                    status: progressPercent >= 20 ? 'Completed' : 'Scanning...',
+                    isDone: progressPercent >= 20
                   },
                   {
-                    title: 'Crawling careers page',
-                    url: `${baseUrlFormatted}/careers`,
-                    status: progressPercent >= 45 ? 'Completed' : progressPercent >= 25 ? 'Extracting...' : 'Pending',
-                    isDone: progressPercent >= 45
+                    title: 'Discovering site pages & engineering links',
+                    url: 'Relative & sub-domain link crawler',
+                    status: progressPercent >= 40 ? 'Completed' : progressPercent >= 20 ? 'Extracting...' : 'Pending',
+                    isDone: progressPercent >= 40
                   },
                   {
-                    title: 'Analyzing about & engineering page',
-                    url: `${baseUrlFormatted}/about`,
-                    status: progressPercent >= 65 ? 'Completed' : progressPercent >= 45 ? 'Extracting...' : 'Pending',
+                    title: 'Searching developer forums & interview discussions',
+                    url: 'Reddit & LeetCode public threads',
+                    status: progressPercent >= 65 ? 'Completed' : progressPercent >= 40 ? 'Searching...' : 'Pending',
                     isDone: progressPercent >= 65
                   },
                   {
-                    title: 'Reading recent news & tech blogs',
-                    url: 'TechCrunch, LinkedIn, Glassdoor...',
-                    status: progressPercent >= 75 ? 'Completed' : progressPercent >= 65 ? 'Extracting...' : 'Pending',
-                    isDone: progressPercent >= 75
-                  },
-                  {
-                    title: 'Gathering tech stack information',
-                    url: 'Detecting technologies and tools',
-                    status: progressPercent >= 85 ? 'Completed' : progressPercent >= 75 ? 'Extracting...' : 'Pending',
+                    title: 'Analyzing role requirements & skill matrix',
+                    url: 'Deterministic requirement extraction',
+                    status: progressPercent >= 85 ? 'Completed' : progressPercent >= 65 ? 'Analyzing...' : 'Pending',
                     isDone: progressPercent >= 85
                   },
                   {
-                    title: 'Extracting company culture & values',
-                    url: 'Mission, values, work environment',
-                    status: progressPercent >= 90 ? 'Completed' : progressPercent >= 85 ? 'Extracting...' : 'Pending',
-                    isDone: progressPercent >= 90
-                  },
-                  {
-                    title: 'Analyzing interview patterns',
-                    url: 'From LeetCode, Reddit & public forums',
-                    status: progressPercent >= 95 ? 'Completed' : progressPercent >= 90 ? 'Extracting...' : 'Pending',
-                    isDone: progressPercent >= 95
+                    title: 'Synthesizing question bank & active recall deck',
+                    url: 'AI Question & Flashcard Builder',
+                    status: progressPercent >= 98 ? 'Completed' : progressPercent >= 85 ? 'Building...' : 'Pending',
+                    isDone: progressPercent >= 98
                   }
                 ].map((item, i) => (
                   <div key={i} className="flex items-center justify-between gap-3 p-2.5 rounded-xl hover:bg-[#F9F9F6] transition-colors">
@@ -394,7 +382,7 @@ export default function CreateKitPage() {
                       <div className={`w-5 h-5 rounded-full flex items-center justify-center shrink-0 font-bold text-[10px] ${
                         item.isDone
                           ? 'bg-[#CCFF00] text-black'
-                          : item.status === 'Extracting...'
+                          : item.status.includes('...')
                           ? 'border-2 border-[#CCFF00] bg-white text-[#0A0A0A]'
                           : 'border border-[#D1D5DB] text-[#AAAAAA]'
                       }`}>
@@ -408,7 +396,7 @@ export default function CreateKitPage() {
 
                     <div className="shrink-0 font-mono text-[10px]">
                       {item.isDone && <span className="text-[#88B800] font-bold uppercase">Completed</span>}
-                      {item.status === 'Extracting...' && <span className="text-[#99D600] font-bold uppercase animate-pulse">Extracting...</span>}
+                      {item.status.includes('...') && <span className="text-[#99D600] font-bold uppercase animate-pulse">{item.status}</span>}
                       {item.status === 'Pending' && <span className="text-[#AAAAAA] uppercase">Pending</span>}
                     </div>
                   </div>
@@ -419,40 +407,39 @@ export default function CreateKitPage() {
               <div className="bg-[#12141A] text-white rounded-xl p-4 font-mono text-[11px] space-y-2 border border-[#222530] shadow-inner">
                 <div className="flex items-center justify-between text-[10px] text-[#8A95A5] border-b border-[#222530] pb-2 uppercase tracking-wider">
                   <div className="flex items-center gap-2">
-                    <span className="w-2 h-2 rounded-full bg-[#CCFF00]"></span>
-                    <span>REAL-TIME LOGS</span>
+                    <span className="w-2 h-2 rounded-full bg-[#CCFF00] animate-pulse"></span>
+                    <span>PIPELINE ACTIVITY LOGS</span>
                   </div>
                   <span className="text-[#CCFF00] font-bold">● LIVE</span>
                 </div>
                 <div className="space-y-1 max-h-36 overflow-y-auto scrollbar-thin">
-                  {currentVisibleLogs.map((log, index) => (
-                    <div key={index} className="flex items-center justify-between gap-4 text-[#C5CBD8]">
-                      <span className="truncate">{log.text}</span>
-                      <span className="text-[10px] text-[#6A7282] shrink-0">{log.time}</span>
-                    </div>
-                  ))}
+                  <div className="flex items-center justify-between gap-4 text-[#CCFF00]">
+                    <span className="truncate">{`> STATUS: ${currentStep.toUpperCase().replace(/_/g, ' ')}`}</span>
+                    <span className="text-[10px] text-[#6A7282] shrink-0">{`${progressPercent}%`}</span>
+                  </div>
+                  <div className="text-[#C5CBD8]">
+                    {`> ${logEntries[Math.min(logEntries.length - 1, Math.floor((progressPercent / 100) * logEntries.length))]?.text || 'Processing pipeline steps...'}`}
+                  </div>
                 </div>
               </div>
 
             </div>
 
-            {/* COLUMN 3: RIGHT PANEL - SOURCES (6) & DATA EXTRACTING & WHY MATTERS (3 Cols) */}
+            {/* COLUMN 3: RIGHT PANEL - SOURCES & EXTRACTED DATA SUMMARY (3 Cols) */}
             <div className="lg:col-span-3 space-y-5">
               
               {/* SOURCES CARD */}
               <div className="bg-white border border-[#E5E5DF] rounded-2xl p-4 shadow-sm space-y-3">
                 <div className="font-mono text-[10px] font-bold text-[#888888] uppercase tracking-wider pb-1 border-b border-[#F0F0EA]">
-                  SOURCES (6)
+                  REAL RESEARCH SOURCES
                 </div>
 
                 <div className="space-y-2 font-sans text-xs">
                   {[
-                    { name: 'Company Website', icon: '🌐', status: progressPercent >= 20 ? 'Done' : 'Scanning' },
-                    { name: 'Careers Page', icon: '💼', status: progressPercent >= 40 ? 'Done' : progressPercent >= 20 ? 'Scanning' : 'Pending' },
-                    { name: 'LinkedIn / Culture', icon: 'in', status: progressPercent >= 60 ? 'Done' : progressPercent >= 40 ? 'Scanning' : 'Pending' },
-                    { name: 'Glassdoor Reviews', icon: 'O', status: progressPercent >= 70 ? 'Done' : progressPercent >= 60 ? 'Scanning' : 'Pending' },
-                    { name: 'TechCrunch / News', icon: 'TC', status: progressPercent >= 80 ? 'Done' : progressPercent >= 70 ? 'Scanning' : 'Pending' },
-                    { name: 'Reddit / LeetCode', icon: '🤖', status: progressPercent >= 90 ? 'Done' : progressPercent >= 80 ? 'Scanning' : 'Pending' }
+                    { name: 'Target Website', icon: '🌐', status: progressPercent >= 20 ? 'Done' : 'Scanning' },
+                    { name: 'Discovered Internal Pages', icon: '📄', status: progressPercent >= 40 ? 'Done' : progressPercent >= 20 ? 'Scanning' : 'Pending' },
+                    { name: 'Reddit Discussions', icon: '💬', status: progressPercent >= 65 ? 'Done' : progressPercent >= 40 ? 'Searching' : 'Pending' },
+                    { name: 'LeetCode & Forums', icon: '💻', status: progressPercent >= 85 ? 'Done' : progressPercent >= 65 ? 'Searching' : 'Pending' }
                   ].map((s, idx) => (
                     <div key={idx} className="flex items-center justify-between gap-2 p-1.5 rounded-lg hover:bg-[#F9F9F6]">
                       <div className="flex items-center gap-2 min-w-0">
@@ -462,7 +449,7 @@ export default function CreateKitPage() {
                       <span className={`px-2 py-0.5 rounded-full text-[9px] font-mono font-bold uppercase shrink-0 ${
                         s.status === 'Done'
                           ? 'bg-[#E8FF00]/30 text-[#6B8E00] border border-[#CCFF00]/60'
-                          : s.status === 'Scanning'
+                          : s.status.includes('ing') || s.status === 'Scanning'
                           ? 'bg-amber-100 text-amber-800 border border-amber-300 animate-pulse'
                           : 'bg-[#F2F2EC] text-[#999999]'
                       }`}>
@@ -470,9 +457,6 @@ export default function CreateKitPage() {
                       </span>
                     </div>
                   ))}
-                  <div className="text-[10px] text-[#888888] font-mono pt-1 text-center cursor-pointer hover:text-[#0A0A0A]">
-                    + More sources...
-                  </div>
                 </div>
               </div>
 

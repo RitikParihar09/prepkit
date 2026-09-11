@@ -5,6 +5,9 @@ import { BriefGenerator } from '../generation/briefGenerator.js';
 import { QuestionGenerator } from '../generation/questionGenerator.js';
 import { CoverageChecker } from '../coverage/coverageChecker.js';
 import { ScheduleAllocator } from '../scheduler/scheduleAllocator.js';
+import { TavilySearchProvider } from '../research/discussions/tavilySearchProvider.js';
+import { ResultFilter } from '../research/discussions/resultFilter.js';
+import { DiscussionExtractor, ExtractedInterviewEvidence } from '../research/discussions/discussionExtractor.js';
 
 export interface ProgressCallback {
   (status: string, message: string, progressPercent: number): void;
@@ -28,31 +31,64 @@ export class KitCoordinator {
     report('analyzing_jd', 'Analyzing job description & extracting requirements...', 10);
     const role = await JDExtractor.extractRoleFromJD(jobDescription);
 
-    // STEP 2: Crawl Company Website & Research Hiring Info
-    report('crawling_company', 'Crawling company website & searching hiring pages...', 25);
+    // STEP 2: Crawl Company Website (Link Discovery & Deterministic Ranking)
+    report('crawling_company', 'Crawling company website & searching hiring pages...', 20);
     const research = await CompanyCrawler.researchCompany(companyUrl);
 
-    // STEP 3: Generate Company Brief
-    report('hiring_research', 'Generating company brief from research text...', 40);
+    // STEP 3: Public Web Discussion Search (Tavily Search Provider)
+    report('searching_interviews', 'Searching Tavily & public web for real interview experiences...', 35);
+    const searchProvider = new TavilySearchProvider();
+    const companyName = research.companyNameGuess || 'Company';
+    
+    // Generate targeted search queries based on requirements & role title
+    const searchQueries = [
+      `"${companyName}" "${role.title}" interview experience questions`,
+      `"${companyName}" technical interview coding system design`,
+      ...role.requirements.slice(0, 3).map(r => `"${companyName}" "${r.text}" interview questions`)
+    ];
+
+    let rawSearchResults: any[] = [];
+    for (const query of searchQueries.slice(0, 3)) {
+      const results = await searchProvider.search(query, { maxResults: 3 });
+      rawSearchResults.push(...results);
+    }
+
+    // Filter, deduplicate, and validate search results
+    report('fetching_sources', 'Filtering & validating public interview discussion sources...', 45);
+    const filteredSources = ResultFilter.filterResults(rawSearchResults);
+
+    // STEP 4: Extract Structured Evidence with Gemini 2.5 Flash
+    report('extracting_evidence', 'Extracting factual interview evidence with Gemini 2.5 Flash...', 55);
+    const evidences: ExtractedInterviewEvidence[] = [];
+    for (const src of filteredSources.slice(0, 4)) {
+      const ev = await DiscussionExtractor.extractEvidence(src.title, src.content, src.url, companyName);
+      if (ev.useful) {
+        evidences.push(ev);
+      }
+    }
+
+    // STEP 5: Generate Company Brief
+    report('hiring_research', 'Generating company brief from research text...', 65);
     const company_brief = await BriefGenerator.generateBrief(companyUrl, research);
 
-    // STEP 4: Generate Categorized Questions & Flashcards (Pass 1)
-    report('generating_questions', 'Generating technical & behavioural questions...', 55);
+    // STEP 6: Question Generation with Evidence Hierarchy (Pass 1)
+    report('generating_questions', 'Generating technical & behavioural questions using evidence hierarchy...', 75);
     const { questions: initialQuestions, flashcards } = await QuestionGenerator.generateInitialQuestionsAndFlashcards(
       role.title,
       role.requirements,
-      company_brief.summary
+      company_brief.summary,
+      evidences
     );
 
     let currentQuestions = [...initialQuestions];
 
-    // STEP 5: Deterministic Coverage Check (Pass 1)
-    report('checking_coverage', 'Running deterministic coverage check against requirements...', 70);
+    // STEP 7: Deterministic Coverage Check (Pass 1)
+    report('checking_coverage', 'Running deterministic coverage check against requirements...', 82);
     let coverage = CoverageChecker.checkCoverage(role.requirements, currentQuestions, 1);
 
-    // STEP 6: Second-Pass Gap Closing if Must-Have Requirements are Uncovered
+    // STEP 8: Second-Pass Gap Closing if Must-Have Requirements are Uncovered
     if (coverage.uncovered_requirement_ids.length > 0) {
-      report('closing_gaps', `Closing coverage gaps for ${coverage.uncovered_requirement_ids.length} uncovered requirement(s)...`, 80);
+      report('closing_gaps', `Closing coverage gaps for ${coverage.uncovered_requirement_ids.length} uncovered requirement(s)...`, 88);
       const uncoveredReqs = role.requirements.filter(r => coverage.uncovered_requirement_ids.includes(r.id));
       const missingQuestions = await QuestionGenerator.generateMissingQuestions(uncoveredReqs, currentQuestions.length);
       currentQuestions.push(...missingQuestions);
@@ -61,11 +97,16 @@ export class KitCoordinator {
       coverage = CoverageChecker.checkCoverage(role.requirements, currentQuestions, 2);
     }
 
-    // STEP 7: Deterministic Schedule Allocation
-    report('building_schedule', 'Building deterministic day-by-day study schedule...', 90);
+    // STEP 9: Deterministic Schedule Allocation
+    report('building_schedule', 'Building deterministic day-by-day study schedule...', 92);
     const schedule = ScheduleAllocator.allocateSchedule(daysAvailable, role.requirements, currentQuestions);
 
-    // STEP 8: Assemble Source Metadata & Final Kit Object
+    // STEP 10: Assemble Source Metadata & Final Kit Object
+    const allPagesUsed = Array.from(new Set([
+      ...research.pagesUsed,
+      ...filteredSources.map(s => s.url)
+    ]));
+
     const kitData: KitData = {
       source: {
         company: research.companyNameGuess || 'Company',
@@ -74,7 +115,7 @@ export class KitCoordinator {
         location: 'Remote / On-site',
         jd_chars: jobDescription.length,
         researched_at: new Date().toISOString(),
-        pages_used: research.pagesUsed
+        pages_used: allPagesUsed
       },
       company_brief,
       role,
@@ -84,8 +125,8 @@ export class KitCoordinator {
       coverage
     };
 
-    // STEP 9: Strict Zod Validation against Appendix A
-    report('validating', 'Validating final kit schema structure...', 95);
+    // STEP 11: Strict Zod Validation against Appendix A
+    report('validating', 'Validating final kit schema structure...', 96);
     const validatedKit = KitSchema.parse(kitData);
     report('completed', 'Interview prep kit successfully generated!', 100);
 
