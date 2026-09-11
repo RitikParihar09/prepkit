@@ -1,0 +1,210 @@
+{
+  "version": "1.0",
+  "generated_at": "2026-09-11T13:58:48.632Z",
+  "kits": [
+    {
+      "id": "case-01",
+      "status": "ok",
+      "kit": {
+        "source": {
+          "company": "stripe",
+          "company_url": "https://stripe.com",
+          "role": "Senior Backend Engineer with 5+ years of Node.js, Express, MongoDB, and System Architecture experience. Responsible for building high-scale microservices, managing database performance, and mentoring junior engineers.",
+          "location": "Remote / On-site",
+          "jd_chars": 217,
+          "researched_at": "2026-09-11T13:58:47.790Z",
+          "pages_used": [
+            "https://stripe.com",
+            "https://stripe.com/in/careers",
+            "https://stripe.com/in/customers/jobber"
+          ]
+        },
+        "company_brief": {
+          "summary": "Overview of stripe derived from public pages.",
+          "what_they_do": "Global GDP running on Stripe: Financial infrastructure to grow your revenue. Accept payments, offer financial services and implement custom revenue models – from your first transaction to your billionth.Financial infrastructure to grow your revenue. ",
+          "sources": [
+            "https://stripe.com",
+            "https://stripe.com/in/careers",
+            "https://stripe.com/in/customers/jobber"
+          ]
+        },
+        "role": {
+          "title": "Senior Backend Engineer with 5+ years of Node.js, Express, MongoDB, and System Architecture experience. Responsible for building high-scale microservices, managing database performance, and mentoring junior engineers.",
+          "seniority": "Senior",
+          "responsibilities": [],
+          "requirements": [
+            {
+              "id": "r1",
+              "text": "General software development skills described in posting",
+              "kind": "technical",
+              "priority": "must"
+            }
+          ]
+        },
+        "questions": [
+          {
+            "id": "q1",
+            "requirement_ids": [
+              "r1"
+            ],
+            "category": "technical",
+            "prompt": "How do you apply General software development skills described in posting in a production environment?",
+            "answer_outline": "• Core principles of General software development skills described in posting\n• Architecture considerations\n• Handling edge cases and error boundaries",
+            "difficulty": 2
+          }
+        ],
+        "flashcards": [
+          {
+            "id": "f1",
+            "front": "What are the core fundamentals of General software development skills described in posting?",
+            "back": "General software development skills described in posting involves standard industry patterns, efficient data handling, and clean code principles.",
+            "requirement_ids": [
+              "r1"
+            ],
+            "confidence": 3
+          }
+        ],
+        "schedule": {
+          "days_available": 5,
+          "days": [
+            {
+              "day": 1,
+              "focus": "TECHNICAL & Hands-on Practice",
+              "question_ids": [
+                "q1"
+              ],
+              "minutes": 40
+            },
+            {
+              "day": 2,
+              "focus": "Deep Dive & Mock Practice (TECHNICAL)",
+              "question_ids": [
+                "q1"
+              ],
+              "minutes": 45
+            },
+            {
+              "day": 3,
+              "focus": "Deep Dive & Mock Practice (TECHNICAL)",
+              "question_ids": [
+                "q1"
+              ],
+              "minutes": 45
+            },
+            {
+              "day": 4,
+              "focus": "Deep Dive & Mock Practice (TECHNICAL)",
+              "question_ids": [
+                "q1"
+              ],
+              "minutes": 45
+            },
+            {
+              "day": 5,
+              "focus": "Deep Dive & Mock Practice (TECHNICAL)",
+              "question_ids": [
+                "q1"
+              ],
+              "minutes": 45
+            }
+          ]
+        },
+        "coverage": {
+          "uncovered_requirement_ids": [],
+          "passes": 1
+        }
+      },
+      "error": null
+    },
+    {
+      "id": "case-02",
+      "status": "ok",
+      "kit": {
+        "source": {
+          "company": "Company",
+          "company_url": "http://localhost:8099/acme/",
+          "role": "Frontend Developer. Must know React and CSS.",
+          "location": "Remote / On-site",
+          "jd_chars": 44,
+          "researched_at": "2026-09-11T13:58:48.631Z",
+          "pages_used": []
+        },
+        "company_brief": {
+          "summary": "No public company website content could be retrieved from http://localhost:8099/acme/.",
+          "what_they_do": "No reliable company information was found.",
+          "sources": []
+        },
+        "role": {
+          "title": "Frontend Developer. Must know React and CSS.",
+          "seniority": "Mid-Level",
+          "responsibilities": [],
+          "requirements": [
+            {
+              "id": "r1",
+              "text": "Frontend Developer. Must know React and CSS.",
+              "kind": "technical",
+              "priority": "must"
+            }
+          ]
+        },
+        "questions": [
+          {
+            "id": "q1",
+            "requirement_ids": [
+              "r1"
+            ],
+            "category": "technical",
+            "prompt": "How do you apply Frontend Developer. Must know React and CSS. in a production environment?",
+            "answer_outline": "• Core principles of Frontend Developer. Must know React and CSS.\n• Architecture considerations\n• Handling edge cases and error boundaries",
+            "difficulty": 2
+          }
+        ],
+        "flashcards": [
+          {
+            "id": "f1",
+            "front": "What are the core fundamentals of Frontend Developer. Must know React and CSS.?",
+            "back": "Frontend Developer. Must know React and CSS. involves standard industry patterns, efficient data handling, and clean code principles.",
+            "requirement_ids": [
+              "r1"
+            ],
+            "confidence": 3
+          }
+        ],
+        "schedule": {
+          "days_available": 3,
+          "days": [
+            {
+              "day": 1,
+              "focus": "TECHNICAL & Hands-on Practice",
+              "question_ids": [
+                "q1"
+              ],
+              "minutes": 40
+            },
+            {
+              "day": 2,
+              "focus": "Deep Dive & Mock Practice (TECHNICAL)",
+              "question_ids": [
+                "q1"
+              ],
+              "minutes": 45
+            },
+            {
+              "day": 3,
+              "focus": "Deep Dive & Mock Practice (TECHNICAL)",
+              "question_ids": [
+                "q1"
+              ],
+              "minutes": 45
+            }
+          ]
+        },
+        "coverage": {
+          "uncovered_requirement_ids": [],
+          "passes": 1
+        }
+      },
+      "error": null
+    }
+  ]
+}
