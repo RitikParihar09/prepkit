@@ -1,24 +1,23 @@
-# AI INTERVIEW PREP KIT
+# AI INTERVIEW PREP KIT ("prepKit")
 
-An AI-powered, research-backed web application that turns any job description and company URL into a personalized interview preparation kit — featuring autonomous web crawling, company brief extraction, categorized question generation, deterministic requirement coverage checking, second-pass gap-closing, flashcards, deterministic study schedule allocation, inline edit preservation, interactive practice drills, and weak spots analytics.
+An AI-powered, research-backed web application that turns any job description and company URL into a personalized interview preparation kit — featuring autonomous web crawling, Tavily public interview discussion discovery, structured Gemini 2.5 Flash evidence extraction, question quality filtering, deterministic requirement coverage checking, second-pass gap-closing, flashcards, deterministic study schedule allocation, inline edit preservation, interactive practice drills, and weak spots analytics.
 
 ---
 
-## 1. Tech Stack & Free-Tier LLM Justification
+## 1. Tech Stack & LLM Integration
 
 - **Frontend**: Next.js 14 App Router, TypeScript, Tailwind CSS, Lucide React Icons (Modern SaaS aesthetic inspired by Linear and Notion).
 - **Backend**: Node.js, Express, TypeScript, Mongoose, JWT Authentication, bcryptjs.
 - **Database**: MongoDB (Atlas or local instance).
-- **LLM Provider Choice (Genuine Free Tier)**:
-  - **Google Gemini (1.5 Flash / 2.0 Flash)** is configured as the default LLM provider. Google Gemini offers a **genuine free tier** (15 Requests Per Minute / 1 Million Tokens Per Minute / 1,500 Requests Per Day) without requiring credit card billing.
-  - **OpenAI / OpenRouter**: Fully supported via abstraction for custom API keys.
-  - **Deterministic Mock Provider**: Automatic fallback if `LLM_API_KEY` is not provided or set to `mock`, allowing offline evaluation without any external API calls or key requirements.
-- **Free-Tier Rate-Limit & Token Resiliency**:
-  - Free-tier LLMs strictly limit both Requests Per Minute (RPM) and Tokens Per Minute (TPM).
-  - To prevent pipeline failures when hitting provider rate limits (`HTTP 429` / `RESOURCE_EXHAUSTED` / `503`), our LLM pipeline implements **Exponential Backoff with Jitter** (up to 5 retries with delays scaling from 2s to 32s) and inspects `Retry-After` HTTP headers.
+- **LLM Provider**:
+  - **Google Gemini 2.5 Flash** (`GEMINI_API_KEY`) is configured as the default LLM provider for requirement extraction, evidence synthesis, and question generation.
   - Multi-pass generation requests are structured concisely to minimize token consumption per call.
+- **Search & Discovery Provider**:
+  - **Tavily API** (`TAVILY_API_KEY`) is integrated as an abstracted `SearchProvider` (`TavilySearchProvider`) to search the public web for real interview experiences on platforms like Reddit, LeetCode Discuss, GitHub, and tech blogs.
+- **Free-Tier Rate-Limit & Token Resiliency**:
+  - To prevent pipeline failures when hitting provider rate limits (`HTTP 429` / `RESOURCE_EXHAUSTED` / `503`), our LLM & search pipeline implements **Exponential Backoff with Jitter** (up to 5 retries with delays scaling from 2s to 32s) and inspects `Retry-After` HTTP headers.
 - **Scraping & Research**: Axios, Cheerio HTML Parser, URL resolution, SSRF protection, dynamic link discovery & link scoring.
-- **Testing**: Vitest for deterministic schedule allocation, requirement coverage checking, and Appendix A schema validation.
+- **Testing**: Vitest for deterministic schedule allocation, requirement coverage checking, result filtering, question quality validation, and Appendix A schema validation.
 
 ---
 
@@ -38,6 +37,14 @@ cd ..
 
 # 2. Configure Environment Variables
 cp .env.example .env
+```
+
+Ensure `.env` contains:
+```env
+GEMINI_API_KEY=your_gemini_api_key
+TAVILY_API_KEY=your_tavily_api_key
+MONGODB_URI=mongodb://localhost:27017/prepkit
+JWT_SECRET=your_jwt_secret
 ```
 
 ### Running Local Development Servers
@@ -76,47 +83,68 @@ npm run evaluate -- --input test-cases.json --output test-kits.json
 
 ---
 
-## 4. Multi-Step Generation & Research Sequencing
+## 4. Multi-Step Generation & Research Sequencing Pipeline
 
-The kit generation pipeline runs in 9 deliberate, sequential steps:
+The research and kit generation pipeline runs in 15 sequential steps:
 
 ```
 Job Description & Company URL
             ↓
-1. Requirement Extraction (Role, Seniority, Requirements r1, r2... with Must/Nice priority)
+1. Requirement Extraction (Gemini 2.5 Flash: r1, r2... with Must/Nice priority)
             ↓
-2. Web Crawler & Link Scorer (Crawls company homepage, ranks links dynamically)
+2. Own Company Crawler (Crawl company domain, score candidate links deterministically)
             ↓
-3. Company Brief Generator (Produces summary, what they do, and research sources)
+3. Tavily Public Web Search (Discover public interview discussions on Reddit, LeetCode, GitHub, Blogs)
             ↓
-4. Categorized Question & Flashcard Generator (Pass 1: Technical, Behavioural, System Design, Fit)
+4. Result Filtering & Deduplication (Validate URLs, reject login/auth noise & non-public pages)
             ↓
-5. Deterministic Coverage Checker (Checks must-have requirement IDs against question tags)
+5. Accessible Page Fetching (Retrieve public discussion pages, strip scripts/styling)
             ↓
-6. Second-Pass Gap Closing (If uncovered must-haves exist, generates targeted missing questions)
+6. Gemini 2.5 Flash Evidence Extraction (Extract structured interview topics, rounds, reported questions)
             ↓
-7. Deterministic Coverage Checker Pass 2 (Final verification)
+7. Research Source Persistence (Store ResearchSource documents with evidence & status)
             ↓
-8. Deterministic Schedule Allocator (Arithmetic distribution over exact N requested days)
+8. Company Brief Generation (Summarize company mission & technical culture honestly)
             ↓
-9. Zod Schema Validation (Validates against Appendix A structure before persistence)
+9. Research-Backed Question Generation (Gemini 2.5 Flash per requirement & evidence hierarchy)
+            ↓
+10. Deterministic Question Quality Filter (Reject generic noise, city names like "Hyderabad", benefits)
+            ↓
+11. Deterministic Coverage Checker (Check must-have requirement IDs against generated questions)
+            ↓
+12. Second-Pass Gap Closing (If uncovered must-haves exist, generate targeted missing questions)
+            ↓
+13. Flashcard Generation (Generate requirement-linked review flashcards)
+            ↓
+14. Deterministic Schedule Allocator (Arithmetic distribution over exact N requested days)
+            ↓
+15. Zod Appendix A Schema Validation (Validate final structure before persistence)
 ```
 
 ---
 
-## 5. Web Research & Dynamic Link Discovery
+## 5. Web Research, Tavily Discovery & Evidence Hierarchy
 
-Finding company hiring information cannot rely on fixed URL paths like `/careers` or `/jobs`. The crawler uses dynamic link discovery:
-1. Crawls the target homepage and extracts all internal hyperlinks.
-2. Resolves relative URLs using `new URL(href, base)`.
-3. Scores candidates using a weighted keyword ranking engine (`hiring`, `careers`, `interview`, `engineering`, `handbook`, `culture`, `values`, `team`).
-4. Fetches the top-ranked pages (capped at 2MB per page, 8-second timeout).
-5. Sanitizes HTML (strips script/nav/footer tags) and passes clean text to the model as **data**, never as instructions.
-6. If no hiring information is found, reports honestly (`"No reliable hiring information was found."`) without fabricating fake company data.
+### Why Tavily for Discovery vs. Own Crawler for Company Domain
+- **Company Crawler**: Scrapes official company website pages to extract company values, tech stack context, and hiring page information.
+- **Tavily Search Engine**: Company websites rarely publish actual interview questions. Tavily discovers authentic candidate interview experiences across public platforms (Reddit, LeetCode Discuss, GitHub, tech blogs).
+
+### Evidence Hierarchy
+To prevent question fabrication while grounding questions in authentic context:
+1. **Level 1 (Highest)**: Actual reported interview questions from candidate experiences.
+2. **Level 2**: Reported interview topics combined with Job Description requirements.
+3. **Level 3**: Official company hiring process evidence combined with Job Description requirements.
+4. **Level 4**: Job Description requirement analysis only (when no public interview evidence exists).
+
+### Prevention of Fabricated Interview Questions & Quality Filtering
+- Gemini 2.5 Flash is strictly instructed never to label a question as a "reported question" unless explicitly supported by research sources.
+- **Deterministic Quality Filter** (`QuestionGenerator.validateQuestionQuality`): Application code validates generated questions to reject generic noise such as city names ("Hyderabad"), benefits, isolated nouns, or prompt injection fragments.
 
 ---
 
-## 6. Deterministic Algorithms (Non-LLM)
+## 6. Deterministic Algorithms (Non-LLM Code)
+
+TypeScript application code retains full control over logical decisions:
 
 ### A. Deterministic Coverage Checker
 Implemented in pure TypeScript (`CoverageChecker.ts`):
@@ -136,42 +164,15 @@ Implemented in pure TypeScript (`ScheduleAllocator.ts`):
 
 ---
 
-## 7. Edit Preservation Strategy (Section Regeneration)
-
-Every generated question and flashcard maintains internal metadata:
-```json
-{
-  "generated": true,
-  "edited": false,
-  "pinned": false,
-  "updatedAt": "2026-09-10T18:00:00.000Z"
-}
-```
-
-- When a user edits a question inline $\rightarrow$ `edited = true`.
-- When a user manually creates a question $\rightarrow$ `pinned = true`.
-- **Regeneration Behavior**: When regenerating a section (e.g., `technical` questions), the backend filters out un-edited generated questions while preserving all items with `edited: true` or `pinned: true`. Fresh questions are generated to replace unedited items, merged with preserved items, and re-processed through the coverage checker and schedule allocator.
-
----
-
-## 8. Creative Feature — Weak Spots Report
-
-To solve the candidate problem of knowing *what* to study next:
-- During flashcard practice drills, candidates rate their confidence on a 1–5 scale.
-- The **Weak Spots Report** aggregates these confidence ratings across requirement categories.
-- Highlights **High Risk / Weak Areas** (average confidence $< 3.5$) versus **Strong Proficiency Areas** ($\ge 3.5$).
-- Generates a **Recommended Practice Priority** list ordering topics by lowest confidence score.
-
----
-
-## 9. Security & SSRF Protection
+## 7. Security, Prompt Injection Protection & Rate Limits
 
 - **SSRF Protection**: URL validation rejects invalid protocols. In production, blocks `localhost`, `127.0.0.1`, `::1`, and private IPv4 ranges (`10.0.0.0/8`, `172.16.0.0/12`, `192.168.0.0/16`). Allows local test URLs when `ALLOW_LOCAL_URLS=true` or in evaluator mode.
-- **Untrusted Page Content**: Crawled web text is stripped of HTML scripts, sanitized, and fed into LLM prompts inside strict data blocks (`"""\n...\n"""`) with explicit instructions treating text as data only.
+- **Untrusted Page Content Boundary**: Fetched webpage text from search results is treated strictly as **DATA ONLY**. Gemini prompts wrap scraped text inside isolated data blocks (`=== START UNTRUSTED WEBPAGE CONTENT === ... === END UNTRUSTED WEBPAGE CONTENT ===`) with explicit instructions to ignore any embedded directives (e.g. "Ignore previous instructions").
+- **Rate Limiting & Retries**: Queue-based concurrency limits, exponential backoff, jitter, and HTTP 429 retry handling are implemented across both Gemini and Tavily services.
 
 ---
 
-## 10. Automated Tests
+## 8. Automated Tests
 
 Run backend unit tests with Vitest:
 ```bash
@@ -179,7 +180,11 @@ npm run backend:test
 ```
 
 Tests cover:
-1. `schedule.test.ts`: 1-day, 5-day, 60-day allocation, must-have inclusion, integer minutes, valid question IDs.
-2. `coverage.test.ts`: 100% coverage verification, missing requirement detection, 2nd pass gap closure.
-3. `kitValidation.test.ts`: Strict Appendix A Zod schema validation, rejection of invalid difficulty/float minutes.
-4. `auth.test.ts`: Password hashing, JWT token generation & verification.
+1. `crawler.test.ts`: Deterministic link scoring, URL normalization, domain restriction.
+2. `resultFilter.test.ts`: Search result filtering, URL deduplication, rejection of login/auth noise.
+3. `questionQuality.test.ts`: Question quality filter blocking city names ("Hyderabad"), benefits, and generic noise.
+4. `coverage.test.ts`: 100% coverage verification, missing requirement detection, 2nd pass gap closure.
+5. `schedule.test.ts`: 1-day, 5-day, 60-day allocation, must-have inclusion, integer minutes, valid question IDs.
+6. `kitValidation.test.ts`: Strict Appendix A Zod schema validation, rejection of invalid difficulty/float minutes.
+7. `auth.test.ts`: Password hashing, JWT token generation & verification.
+
