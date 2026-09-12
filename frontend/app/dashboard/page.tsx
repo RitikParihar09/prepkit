@@ -200,8 +200,8 @@ export default function DashboardPage() {
 
         <div className="flex flex-col md:flex-row md:items-end justify-between gap-6">
           <div>
-            <h1 className="text-3xl sm:text-4xl font-normal text-[#0A0A0A] tracking-tight uppercase">
-              YOUR INTERVIEW KITS
+            <h1 className="text-3xl sm:text-4xl font-bold text-[#0A0A0A] tracking-wider uppercase">
+              YOUR&nbsp;&nbsp;INTERVIEW&nbsp;&nbsp;KITS
             </h1>
           </div>
 
@@ -216,10 +216,10 @@ export default function DashboardPage() {
 
             <Link
               href="/kits/new"
-              className="tech-button-primary text-xs py-2.5 px-4 rounded-none font-mono uppercase"
+              className="tech-button-primary text-xs py-2.5 px-4 rounded-none font-sans font-bold uppercase tracking-wider text-[#0A0A0A]"
             >
               <Plus className="w-4 h-4" />
-              <span>CREATE KIT</span>
+              <span>CREATE&nbsp;&nbsp;INTERVIEW&nbsp;&nbsp;PREP&nbsp;&nbsp;KIT</span>
             </Link>
           </div>
         </div>
@@ -319,9 +319,9 @@ export default function DashboardPage() {
           </p>
           <Link
             href="/kits/new"
-            className="tech-button-primary inline-flex py-3 px-6 text-xs font-mono uppercase"
+            className="tech-button-primary inline-flex py-3 px-6 text-xs font-sans font-bold uppercase tracking-wider text-[#0A0A0A]"
           >
-            <span>CREATE FIRST PREP KIT</span>
+            <span>CREATE&nbsp;&nbsp;INTERVIEW&nbsp;&nbsp;PREP&nbsp;&nbsp;KIT</span>
             <ArrowRight className="w-4 h-4" />
           </Link>
         </div>

@@ -24,7 +24,7 @@ describe('Question Quality Filter Unit Tests', () => {
       difficulty: 2
     };
 
-    expect(QuestionGenerator.validateQuestionQuality(badCityQuestion, validReqIds)).toBe(false);
-    expect(QuestionGenerator.validateQuestionQuality(validTechQuestion, validReqIds)).toBe(true);
+    expect(QuestionGenerator.validateQuestionQuality(badCityQuestion.prompt)).toBe(false);
+    expect(QuestionGenerator.validateQuestionQuality(validTechQuestion.prompt)).toBe(true);
   });
 });

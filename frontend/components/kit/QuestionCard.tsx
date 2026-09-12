@@ -137,18 +137,34 @@ export function QuestionCard({
             />
           </div>
 
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-2">
-              <label className="font-bold text-[#0A0A0A]">DIFFICULTY:</label>
-              <select
-                value={difficulty}
-                onChange={e => setDifficulty(parseInt(e.target.value, 10) as 1 | 2 | 3)}
-                className="text-xs p-1.5 border border-[#E5E5E0] font-mono bg-white"
-              >
-                <option value={1}>1 - EASY</option>
-                <option value={2}>2 - INTERMEDIATE</option>
-                <option value={3}>3 - HARD</option>
-              </select>
+          <div className="flex items-center justify-between flex-wrap gap-2">
+            <div className="flex items-center gap-3">
+              <div className="flex items-center gap-1.5">
+                <label className="font-bold text-[#0A0A0A]">CATEGORY:</label>
+                <select
+                  value={question.category}
+                  onChange={e => onUpdate({ ...question, category: e.target.value as any, _meta: { ...(question._meta || { generated: true, edited: false, pinned: false }), edited: true, pinned: true } })}
+                  className="text-xs p-1.5 border border-[#E5E5E0] font-mono bg-white font-bold text-[#0A0A0A]"
+                >
+                  <option value="technical">TECHNICAL</option>
+                  <option value="behavioural">BEHAVIOURAL</option>
+                  <option value="system-design">SYSTEM DESIGN</option>
+                  <option value="company-fit">COMPANY FIT</option>
+                </select>
+              </div>
+
+              <div className="flex items-center gap-1.5">
+                <label className="font-bold text-[#0A0A0A]">DIFFICULTY:</label>
+                <select
+                  value={difficulty}
+                  onChange={e => setDifficulty(parseInt(e.target.value, 10) as 1 | 2 | 3)}
+                  className="text-xs p-1.5 border border-[#E5E5E0] font-mono bg-white"
+                >
+                  <option value={1}>1 - EASY</option>
+                  <option value={2}>2 - INTERMEDIATE</option>
+                  <option value={3}>3 - HARD</option>
+                </select>
+              </div>
             </div>
 
             <div className="flex items-center gap-2">

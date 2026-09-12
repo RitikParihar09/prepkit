@@ -20,10 +20,10 @@ export class TavilySearchProvider implements SearchProvider {
 
     try {
       const response = await this.client.search(query, {
-        maxResults: options.maxResults || 5,
+        maxResults: options.maxResults || 6,
         includeDomains: options.includeDomains,
         excludeDomains: options.excludeDomains,
-        searchDepth: options.searchDepth || 'basic'
+        searchDepth: 'advanced'
       });
 
       if (!response.results || !Array.isArray(response.results)) {

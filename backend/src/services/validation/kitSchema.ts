@@ -38,7 +38,7 @@ export const FlashcardSchema = z.object({
   front: z.string().min(1, 'Front text cannot be empty'),
   back: z.string().min(1, 'Back text cannot be empty'),
   requirement_ids: z.array(z.string()).min(1, 'Flashcard must reference at least one requirement_id'),
-  confidence: z.number().min(1).max(5).optional(),
+  confidence: z.number().min(0).max(5).optional(),
   lastPracticedAt: z.string().optional(),
   _meta: ItemMetaSchema
 });
@@ -48,7 +48,9 @@ export const ScheduleDaySchema = z.object({
   focus: z.string().min(1, 'Day focus title is required'),
   question_ids: z.array(z.string()),
   minutes: z.number().int().min(1, 'Minutes must be a positive integer'),
-  isCompleted: z.boolean().optional()
+  isCompleted: z.boolean().optional(),
+  topic: z.string().optional(),
+  objectives: z.array(z.string()).optional()
 });
 
 export const ScheduleSchema = z.object({
@@ -61,9 +63,30 @@ export const CoverageSchema = z.object({
   passes: z.number().int().min(1)
 });
 
+export const InterviewRoundSchema = z.object({
+  round_number: z.number().int().min(1),
+  title: z.string(),
+  type: z.enum(['online_assessment', 'recruiter_screen', 'technical_coding', 'system_design', 'take_home', 'hr_behavioral', 'other']),
+  duration: z.string().optional(),
+  focus_areas: z.array(z.string()).optional(),
+  description: z.string().optional()
+});
+
+export const InterviewPatternSchema = z.object({
+  pattern_name: z.string(),
+  confidence: z.number().min(0).max(1).optional(),
+  source_type: z.string().optional(),
+  rounds: z.array(InterviewRoundSchema),
+  notes: z.string().optional()
+});
+
 export const CompanyBriefSchema = z.object({
   summary: z.string(),
   what_they_do: z.string(),
+  interview_process: z.array(z.string()).optional(),
+  take_home_assignment: z.string().optional(),
+  interview_patterns: z.array(InterviewPatternSchema).optional(),
+  process_found: z.boolean().optional(),
   sources: z.array(z.string())
 });
 

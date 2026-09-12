@@ -224,14 +224,10 @@ export function HowItWorksModal({ isOpen, onClose }: HowItWorksModalProps) {
     } catch {}
   }, [checkedCount, mounted]);
 
-  // Reset checkedCount ONLY when step index changes manually
-  const prevStepRef = React.useRef(activeStepIndex);
-  useEffect(() => {
-    if (prevStepRef.current !== activeStepIndex) {
-      setCheckedCount(0);
-      prevStepRef.current = activeStepIndex;
-    }
-  }, [activeStepIndex]);
+  const handleGoToStep = (newStepIndex: number) => {
+    setCheckedCount(0);
+    setActiveStepIndex(newStepIndex);
+  };
 
   // Sequential ticking animation per slide then advance slide
   useEffect(() => {
@@ -260,6 +256,7 @@ export function HowItWorksModal({ isOpen, onClose }: HowItWorksModalProps) {
       if (activeStepIndex === STEP_DATA.length - 1) {
         setIsPlaying(false);
       } else {
+        setCheckedCount(0);
         setActiveStepIndex(prev => prev + 1);
       }
     }, totalSlideTime);
@@ -283,12 +280,14 @@ export function HowItWorksModal({ isOpen, onClose }: HowItWorksModalProps) {
 
   const handleNext = () => {
     if (activeStepIndex < STEP_DATA.length - 1) {
+      setCheckedCount(0);
       setActiveStepIndex(prev => prev + 1);
     }
   };
 
   const handlePrev = () => {
     if (activeStepIndex > 0) {
+      setCheckedCount(0);
       setActiveStepIndex(prev => prev - 1);
     }
   };
@@ -406,7 +405,7 @@ export function HowItWorksModal({ isOpen, onClose }: HowItWorksModalProps) {
               return (
                 <button
                   key={item.id}
-                  onClick={() => setActiveStepIndex(idx)}
+                  onClick={() => handleGoToStep(idx)}
                   className="relative z-10 flex flex-col items-center group cursor-pointer"
                 >
                   <div className={`w-11 h-11 rounded-2xl flex items-center justify-center transition-all duration-300 ${
@@ -1235,7 +1234,7 @@ export function HowItWorksModal({ isOpen, onClose }: HowItWorksModalProps) {
               {STEP_DATA.map((_, idx) => (
                 <button
                   key={idx}
-                  onClick={() => setActiveStepIndex(idx)}
+                  onClick={() => handleGoToStep(idx)}
                   className={`w-2.5 h-2.5 rounded-full transition-all cursor-pointer ${
                     idx === activeStepIndex ? 'bg-[#E8FF00] w-6' : 'bg-[#E0E0DA] hover:bg-[#CCCCCC]'
                   }`}
@@ -1274,7 +1273,9 @@ export function HowItWorksModal({ isOpen, onClose }: HowItWorksModalProps) {
                 }`}
               >
                 <span>Create your prep kit</span>
-                <ArrowRight className="w-3.5 h-3.5 stroke-[2.8]" />
+                <ArrowRight className={`w-3.5 h-3.5 stroke-[2.8] ${
+                  checkedCount >= 4 ? 'animate-arrow-nudge' : ''
+                }`} />
               </a>
             )}
           </div>

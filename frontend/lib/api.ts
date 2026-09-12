@@ -33,6 +33,9 @@ async function request<T>(endpoint: string, options: RequestInit = {}): Promise<
   const data = await response.json();
 
   if (!response.ok) {
+    if (response.status === 401) {
+      setAuthToken(null);
+    }
     throw new Error(data.error?.message || 'An error occurred while communicating with the server.');
   }
 
@@ -61,7 +64,7 @@ export const api = {
   getMe: () => request<{ user: any }>('/auth/me'),
 
   // Kits
-  createKit: (payload: { jobDescription: string; companyUrl: string; daysAvailable: number }) =>
+  createKit: (payload: { jobDescription: string; companyUrl: string; daysAvailable: number; interviewNotes?: string }) =>
     request<{ id: string; status: string; stepMessage: string; progressPercent: number }>('/kits', {
       method: 'POST',
       body: JSON.stringify(payload)
@@ -69,7 +72,19 @@ export const api = {
 
   getUserKits: () => request<{ kits: any[] }>('/kits'),
 
-  getKitById: (id: string) => request<{ id: string; status: string; stepMessage: string; progressPercent: number; data?: any; error?: any }>(`/kits/${id}`),
+  getKitById: (id: string) => request<{
+    id: string;
+    companyUrl?: string;
+    jobDescription?: string;
+    daysAvailable?: number;
+    status: string;
+    stepMessage: string;
+    progressPercent: number;
+    logs?: { text: string; time: string; url?: string }[];
+    crawledSources?: { name: string; url: string; status: string }[];
+    data?: any;
+    error?: any;
+  }>(`/kits/${id}`),
 
   updateKitData: (id: string, data: any) =>
     request<{ status: string; data: any }>(`/kits/${id}`, {

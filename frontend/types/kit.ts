@@ -38,6 +38,8 @@ export interface ScheduleDay {
   question_ids: string[];
   minutes: number;
   isCompleted?: boolean;
+  topic?: string;
+  objectives?: string[];
 }
 
 export interface Schedule {
@@ -50,10 +52,31 @@ export interface Coverage {
   passes: number;
 }
 
+export interface InterviewRound {
+  round_number: number;
+  title: string;
+  type: 'online_assessment' | 'recruiter_screen' | 'technical_coding' | 'system_design' | 'take_home' | 'hr_behavioral' | 'other';
+  duration?: string;
+  focus_areas?: string[];
+  description?: string;
+}
+
+export interface InterviewPattern {
+  pattern_name: string;
+  confidence?: number;
+  source_type?: string;
+  rounds: InterviewRound[];
+  notes?: string;
+}
+
 export interface CompanyBrief {
   summary: string;
   what_they_do: string;
   sources: string[];
+  interview_process?: string[];
+  take_home_assignment?: string;
+  interview_patterns?: InterviewPattern[];
+  process_found?: boolean;
 }
 
 export interface Source {

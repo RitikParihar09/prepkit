@@ -89,6 +89,59 @@ export function validateUrl(targetUrl: string): boolean {
   }
 }
 
+export function extractCompanyName(companyUrl: string, textOrJd?: string): string {
+  if (!companyUrl) return 'Company';
+
+  try {
+    const formattedUrl = companyUrl.startsWith('http') ? companyUrl : `https://${companyUrl}`;
+    const parsed = new URL(formattedUrl);
+    const hostParts = parsed.hostname.replace(/^www\./, '').split('.');
+    
+    // Ignore common generic subdomain prefixes
+    const ignoreSubdomains = new Set(['jobs', 'careers', 'work', 'web', 'app', 'www', 'about', 'join', 'in', 'uk', 'us', 'eu']);
+    
+    let mainDomain = hostParts[0];
+    if (ignoreSubdomains.has(mainDomain.toLowerCase()) && hostParts.length > 1) {
+      mainDomain = hostParts[1];
+    }
+    
+    if (mainDomain && mainDomain.length > 1) {
+      const formattedDomain = mainDomain.charAt(0).toUpperCase() + mainDomain.slice(1);
+      
+      if (!['Github', 'Linkedin', 'Medium', 'Notion', 'Glassdoor', 'Substack'].includes(formattedDomain)) {
+        if (textOrJd) {
+          const regex = new RegExp(`\\b(${mainDomain})\\b`, 'i');
+          const match = textOrJd.match(regex);
+          if (match && match[0]) {
+            return match[0].charAt(0).toUpperCase() + match[0].slice(1);
+          }
+        }
+        return formattedDomain;
+      }
+    }
+  } catch {
+    // Ignore URL parse errors
+  }
+
+  if (textOrJd) {
+    const jdPatterns = [
+      /\b(?:at|for|join|building|team at)\s+([A-Z][a-zA-Z0-9\&\.\-]{2,20})\b/,
+      /About\s+([A-Z][a-zA-Z0-9\&\.\-]{2,20})[:\s]/,
+      /([A-Z][a-zA-Z0-9\&\.\-]{2,20})\s+is\s+(?:hiring|looking|seeking)/,
+      /Welcome to\s+([A-Z][a-zA-Z0-9\&\.\-]{2,20})/
+    ];
+
+    for (const pat of jdPatterns) {
+      const match = textOrJd.match(pat);
+      if (match && match[1] && !['the', 'our', 'a', 'an', 'this', 'senior', 'junior', 'lead', 'full', 'software', 'engineer'].includes(match[1].toLowerCase())) {
+        return match[1];
+      }
+    }
+  }
+
+  return 'Company';
+}
+
 export class CompanyCrawler {
   /**
    * Scores a hyperlink candidate based on its URL, anchor text, and title
@@ -118,9 +171,76 @@ export class CompanyCrawler {
   }
 
   /**
+   * Checks target URL against domain robots.txt Disallow rules
+   */
+  static async isPathAllowedByRobots(targetUrl: string): Promise<boolean> {
+    try {
+      const parsed = new URL(targetUrl);
+      const robotsUrl = `${parsed.origin}/robots.txt`;
+      const res = await axios.get(robotsUrl, { timeout: 3000, headers: { 'User-Agent': 'TraoPrepKitBot/1.0 (+https://trao.io)' } });
+      if (!res.data || typeof res.data !== 'string') return true;
+
+      const pathname = parsed.pathname.toLowerCase();
+      const lines = res.data.split('\n');
+      let isUserAgentMatch = true;
+
+      for (const line of lines) {
+        const clean = line.trim();
+        if (clean.toLowerCase().startsWith('user-agent:')) {
+          const ua = clean.split(':')[1].trim();
+          isUserAgentMatch = ua === '*' || ua.toLowerCase().includes('traoprepkitbot');
+        } else if (isUserAgentMatch && clean.toLowerCase().startsWith('disallow:')) {
+          const disallowPath = clean.split(':')[1].trim().toLowerCase();
+          if (disallowPath && disallowPath !== '/' && pathname.startsWith(disallowPath)) {
+            return false;
+          }
+        }
+      }
+      return true;
+    } catch {
+      // If robots.txt fails or 404s, allow crawling politely
+      return true;
+    }
+  }
+  private static async sleep(ms: number): Promise<void> {
+    return new Promise(resolve => setTimeout(resolve, ms));
+  }
+
+  /**
+   * Fetches a single page with polite rate limiting and exponential backoff retry on HTTP 429 / 5xx
+   */
+  static async fetchPageWithBackoff(url: string, retries: number = 2, baseDelayMs: number = 300): Promise<{ html: string; error?: string }> {
+    for (let attempt = 0; attempt <= retries; attempt++) {
+      try {
+        if (attempt > 0) {
+          const backoffTime = baseDelayMs * Math.pow(2, attempt - 1);
+          await this.sleep(backoffTime);
+        }
+
+        const res = await axios.get(url, {
+          timeout: 6000,
+          maxContentLength: 2 * 1024 * 1024,
+          headers: { 'User-Agent': 'TraoPrepKitBot/1.0 (+https://trao.io)' }
+        });
+
+        return { html: res.data };
+      } catch (err: any) {
+        const isRateLimit = err?.response?.status === 429 || err?.response?.status === 503;
+        if (isRateLimit && attempt < retries) {
+          console.warn(`[Crawler Rate-Limit] 429/503 received for ${url}. Retrying attempt ${attempt + 1} with exponential backoff...`);
+          continue;
+        }
+        return { html: '', error: err.message || 'Page request failed' };
+      }
+    }
+    return { html: '', error: 'Max retries exceeded' };
+  }
+
+  /**
    * Cleans HTML content, extracting plain text content safely
    */
   static cleanHtml(html: string): { title: string; text: string } {
+    if (!html) return { title: 'Empty Page', text: '' };
     const $ = cheerio.load(html);
     // Remove irrelevant tags
     $('script, style, noscript, svg, nav, footer, header, iframe').remove();
@@ -136,11 +256,6 @@ export class CompanyCrawler {
 
     return { title, text: text.substring(0, 10000) }; // Cap per-page text at 10KB
   }
-
-  /**
-   * Searches public developer discussion portals (Reddit API, GitHub Interview Repositories, HackerNews API)
-   * for actual interview questions asked by the company without requiring paid API keys.
-   */
   static async searchPublicDeveloperDiscussions(companyName: string): Promise<ScrapedPage[]> {
     if (!companyName || companyName.length < 2 || companyName.toLowerCase() === 'localhost') return [];
 
@@ -239,10 +354,10 @@ export class CompanyCrawler {
   /**
    * Main crawl entry point for a company website and public interview discussion
    */
-  static async researchCompany(companyUrl: string): Promise<ResearchResult> {
+  static async researchCompany(companyUrl: string, onLog?: (msg: string, url?: string) => void): Promise<ResearchResult> {
     const result: ResearchResult = {
       companyUrl,
-      companyNameGuess: '',
+      companyNameGuess: extractCompanyName(companyUrl),
       pages: [],
       pagesUsed: [],
       summaryText: '',
@@ -252,10 +367,12 @@ export class CompanyCrawler {
 
     if (!validateUrl(companyUrl)) {
       result.error = `INVALID_URL: The provided company URL "${companyUrl}" is invalid or restricted by security policy.`;
+      onLog?.(`Security check failed: ${companyUrl} is invalid or restricted.`);
       return result;
     }
 
     try {
+      onLog?.(`Connecting to company website: ${companyUrl}`, companyUrl);
       // 1. Fetch Homepage
       const homepageRes = await axios.get(companyUrl, {
         timeout: 8000,
@@ -274,6 +391,7 @@ export class CompanyCrawler {
         score: 100
       });
       result.pagesUsed.push(companyUrl);
+      onLog?.(`Fetched homepage (${homepageData.title || result.companyNameGuess}) - ${homepageData.text.length} chars extracted`, companyUrl);
 
       // 2. Discover & Rank Internal Links (Strict Hiring & Culture Filter)
       const $ = cheerio.load(homepageRes.data);
@@ -327,28 +445,38 @@ export class CompanyCrawler {
 
       // Sort candidate links by score descending
       linkCandidates.sort((a, b) => b.score - a.score);
+      onLog?.(`Discovered ${linkCandidates.length} engineering & hiring page candidates on ${baseUrlParsed.hostname}`);
 
-      // 3. Fetch Top 6 Promising Subpages (e.g. /careers, /jobs, handbook, engineering blog, about)
+      // 3. Fetch Top 6 Promising Subpages with rate limiting, backoff & robots.txt compliance
       const topCandidates = linkCandidates.slice(0, 6);
       for (const candidate of topCandidates) {
-        try {
-          const pageRes = await axios.get(candidate.url, {
-            timeout: 6000,
-            maxContentLength: 2 * 1024 * 1024,
-            headers: { 'User-Agent': 'TraoPrepKitBot/1.0 (+https://trao.io)' }
+        // Rate-limiting delay between subpage requests
+        await this.sleep(250);
+
+        // Respect robots.txt Disallow rules
+        const allowedByRobots = await this.isPathAllowedByRobots(candidate.url);
+        if (!allowedByRobots) {
+          console.warn(`[Crawler Robots.txt] Skipping disallowed source ${candidate.url}`);
+          continue;
+        }
+
+        onLog?.(`Crawling target subpage: ${candidate.url}`, candidate.url);
+        const { html, error: fetchErr } = await this.fetchPageWithBackoff(candidate.url, 2, 300);
+        if (fetchErr) {
+          console.warn(`[Crawler Warning] Skipping unretrievable source ${candidate.url}: ${fetchErr}`);
+          continue;
+        }
+
+        const pageData = this.cleanHtml(html);
+        if (pageData.text.length > 50) {
+          result.pages.push({
+            url: candidate.url,
+            title: pageData.title,
+            text: pageData.text,
+            score: candidate.score
           });
-          const pageData = this.cleanHtml(pageRes.data);
-          if (pageData.text.length > 50) {
-            result.pages.push({
-              url: candidate.url,
-              title: pageData.title,
-              text: pageData.text,
-              score: candidate.score
-            });
-            result.pagesUsed.push(candidate.url);
-          }
-        } catch (pageError: any) {
-          console.warn(`[Crawler Warning] Failed to fetch subpage ${candidate.url}: ${pageError.message}`);
+          result.pagesUsed.push(candidate.url);
+          onLog?.(`Scraped page content: "${pageData.title}" (${candidate.url})`, candidate.url);
         }
       }
 

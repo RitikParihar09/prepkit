@@ -1,13 +1,19 @@
 import { Response } from 'express';
 import { AuthenticatedRequest } from '../middleware/authMiddleware.js';
 import { KitModel } from '../models/Kit.js';
+import { QuestionModel } from '../models/Question.js';
+import { FlashcardModel } from '../models/Flashcard.js';
+import { ScheduleModel } from '../models/Schedule.js';
+import { CompanyBriefModel } from '../models/CompanyBrief.js';
+import { RoleModel } from '../models/Role.js';
 import { KitCoordinator } from '../services/kits/kitCoordinator.js';
 import { z } from 'zod';
 
 const createKitSchema = z.object({
   jobDescription: z.string().min(10, 'Job description must be at least 10 characters'),
   companyUrl: z.string().url('A valid company URL is required'),
-  daysAvailable: z.number().int().min(1).max(60)
+  daysAvailable: z.number().int().min(1).max(60),
+  interviewNotes: z.string().optional()
 });
 
 export class KitController {
@@ -25,7 +31,7 @@ export class KitController {
         });
       }
 
-      const { jobDescription, companyUrl, daysAvailable } = parsed.data;
+      const { jobDescription, companyUrl, daysAvailable, interviewNotes } = parsed.data;
 
       // Create initial Kit document in 'queued' state
       const kitDoc = await KitModel.create({
@@ -44,12 +50,22 @@ export class KitController {
         jobDescription,
         companyUrl,
         daysAvailable,
-        async (status, stepMessage, progressPercent) => {
-          await KitModel.findByIdAndUpdate(kitDoc._id, {
+        interviewNotes,
+        async (status, stepMessage, progressPercent, log, source) => {
+          const updateObj: any = {
             status: status as any,
             stepMessage,
             progressPercent
-          });
+          };
+
+          const updateQuery: any = { $set: updateObj };
+          if (log || source) {
+            updateQuery.$push = {};
+            if (log) updateQuery.$push.logs = log;
+            if (source) updateQuery.$push.crawledSources = source;
+          }
+
+          await KitModel.findByIdAndUpdate(kitDoc._id, updateQuery);
         }
       )
         .then(async (kitData) => {
@@ -59,6 +75,7 @@ export class KitController {
             progressPercent: 100,
             data: kitData
           });
+          await saveKitSubModels(kitDoc._id, kitData);
         })
         .catch(async (err) => {
           await KitModel.findByIdAndUpdate(kitDoc._id, {
@@ -126,9 +143,14 @@ export class KitController {
 
       return res.status(200).json({
         id: kit._id.toString(),
+        companyUrl: kit.companyUrl,
+        jobDescription: kit.jobDescription,
+        daysAvailable: kit.daysAvailable,
         status: kit.status,
         stepMessage: kit.stepMessage,
         progressPercent: kit.progressPercent,
+        logs: kit.logs || [],
+        crawledSources: kit.crawledSources || [],
         error: kit.error,
         data: kit.data,
         createdAt: kit.createdAt
@@ -150,6 +172,7 @@ export class KitController {
       kit.data = req.body.data;
       kit.markModified('data');
       await kit.save();
+      await saveKitSubModels(kit._id, kit.data);
 
       return res.status(200).json({ status: 'ok', data: kit.data });
     } catch (error: any) {
@@ -171,6 +194,7 @@ export class KitController {
 
       kit.data = updatedKitData;
       await kit.save();
+      await saveKitSubModels(kit._id, kit.data);
 
       return res.status(200).json({ status: 'ok', data: kit.data });
     } catch (error: any) {
@@ -194,6 +218,7 @@ export class KitController {
         fc.lastPracticedAt = new Date().toISOString();
         kit.markModified('data');
         await kit.save();
+        await saveKitSubModels(kit._id, kit.data);
       }
 
       return res.status(200).json({ status: 'ok', flashcards: kit.data.flashcards });
@@ -211,9 +236,107 @@ export class KitController {
         return res.status(404).json({ error: { code: 'NOT_FOUND', message: 'Kit not found.' } });
       }
 
+      await Promise.all([
+        QuestionModel.deleteMany({ kitId: kit._id }),
+        FlashcardModel.deleteMany({ kitId: kit._id }),
+        ScheduleModel.deleteMany({ kitId: kit._id }),
+        CompanyBriefModel.deleteMany({ kitId: kit._id }),
+        RoleModel.deleteMany({ kitId: kit._id })
+      ]);
+
       return res.status(200).json({ status: 'ok', message: 'Kit deleted.' });
     } catch (error: any) {
       return res.status(500).json({ error: { code: 'SERVER_ERROR', message: error.message } });
     }
+  }
+}
+
+/**
+ * Persists sub-models into standalone MongoDB Atlas collections (questions, flashcards, schedules, company_briefs, roles)
+ */
+async function saveKitSubModels(kitId: any, kitData: any) {
+  if (!kitData) return;
+  try {
+    // Clean up existing sub-documents for this kitId
+    await Promise.all([
+      QuestionModel.deleteMany({ kitId }),
+      FlashcardModel.deleteMany({ kitId }),
+      ScheduleModel.deleteMany({ kitId }),
+      CompanyBriefModel.deleteMany({ kitId }),
+      RoleModel.deleteMany({ kitId })
+    ]);
+
+    const company = kitData.source?.company || 'Company';
+    const role = kitData.source?.role || kitData.role?.title || 'Role';
+
+    // Save standalone Questions
+    if (Array.isArray(kitData.questions) && kitData.questions.length > 0) {
+      await QuestionModel.insertMany(
+        kitData.questions.map((q: any) => ({
+          kitId,
+          company,
+          role,
+          questionId: q.id,
+          requirement_ids: q.requirement_ids,
+          category: q.category,
+          prompt: q.prompt,
+          answer_outline: q.answer_outline,
+          difficulty: q.difficulty,
+          _meta: q._meta
+        }))
+      );
+    }
+
+    // Save standalone Flashcards
+    if (Array.isArray(kitData.flashcards) && kitData.flashcards.length > 0) {
+      await FlashcardModel.insertMany(
+        kitData.flashcards.map((f: any) => ({
+          kitId,
+          company,
+          role,
+          flashcardId: f.id,
+          front: f.front,
+          back: f.back,
+          requirement_ids: f.requirement_ids,
+          confidence: f.confidence,
+          lastPracticedAt: f.lastPracticedAt,
+          _meta: f._meta
+        }))
+      );
+    }
+
+    // Save standalone Schedule
+    if (kitData.schedule) {
+      await ScheduleModel.create({
+        kitId,
+        daysAvailable: kitData.schedule.days_available,
+        days: kitData.schedule.days
+      });
+    }
+
+    // Save standalone CompanyBrief
+    if (kitData.company_brief) {
+      await CompanyBriefModel.create({
+        kitId,
+        summary: kitData.company_brief.summary,
+        what_they_do: kitData.company_brief.what_they_do,
+        interview_process: kitData.company_brief.interview_process,
+        take_home_assignment: kitData.company_brief.take_home_assignment,
+        sources: kitData.company_brief.sources
+      });
+    }
+
+    // Save standalone Role
+    if (kitData.role) {
+      await RoleModel.create({
+        kitId,
+        title: kitData.role.title,
+        seniority: kitData.role.seniority,
+        responsibilities: kitData.role.responsibilities,
+        requirements: kitData.role.requirements
+      });
+    }
+  } catch (err) {
+    console.error('Error persisting kit sub-models to MongoDB Atlas collections:', err);
   }
 }

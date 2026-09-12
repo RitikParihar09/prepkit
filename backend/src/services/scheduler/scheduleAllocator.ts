@@ -68,26 +68,64 @@ export class ScheduleAllocator {
         const totalDifficulty = dayQuestions.reduce((acc, q) => acc + (q.difficulty || 2), 0);
         d.minutes = Math.round(totalDifficulty * 20);
 
-        // Derive meaningful focus string from predominant category or requirement text
+        // Derive meaningful focus & topic string from predominant category
         const categories = dayQuestions.map(q => q.category);
         const mostFreqCat = this.getMostFrequentCategory(categories);
-        const formattedCat = mostFreqCat ? mostFreqCat.replace('-', ' ').toUpperCase() : 'CORE CONCEPTS';
-        d.focus = `${formattedCat} & Hands-on Practice`;
+
+        if (mostFreqCat === 'system-design') {
+          d.topic = 'Distributed Systems Architecture, Database Tuning & Scalability';
+          d.objectives = [
+            'Design scalable microservice architectures, caching layers, and database partitioning',
+            'Evaluate system latency, throughput, and fault-tolerance tradeoffs',
+            `Solve targeted architecture questions: ${dayQuestions.map(q => q.id).join(', ')}`
+          ];
+        } else if (mostFreqCat === 'behavioural') {
+          d.topic = 'Leadership Principles, STAR Method & Past Project Walkthroughs';
+          d.objectives = [
+            'Structure Situation, Task, Action, and Result (STAR) stories for engineering challenges',
+            'Demonstrate ownership, customer obsession, and technical conflict resolution',
+            `Practice behavioral scenarios: ${dayQuestions.map(q => q.id).join(', ')}`
+          ];
+        } else if (mostFreqCat === 'company-fit') {
+          d.topic = 'Company Business Model, Product Vision & Culture Alignment';
+          d.objectives = [
+            'Analyze company product architecture, engineering blog posts, and business priorities',
+            'Prepare strategic questions for engineering managers and hiring leads',
+            `Review company fit prompts: ${dayQuestions.map(q => q.id).join(', ')}`
+          ];
+        } else {
+          d.topic = 'Data Structures, Algorithmic Problem Solving & Code Quality';
+          d.objectives = [
+            'Master core data structures, Big-O complexity, and boundary-condition handling',
+            'Implement clean, maintainable code with high unit test coverage',
+            `Solve technical coding problems: ${dayQuestions.map(q => q.id).join(', ')}`
+          ];
+        }
+
+        d.focus = `${d.topic.split(',')[0]} & Hands-on Practice`;
       } else {
         // Day with no new questions (e.g., in sparse schedules like 60 days):
         // Assign mock/review focus with baseline integer minutes
         if (sortedQuestions.length > 0) {
-          // Reference a sample core question for review if available
           const reviewQ = sortedQuestions[(d.day - 1) % sortedQuestions.length];
           if (reviewQ) {
             d.question_ids.push(reviewQ.id);
+            d.topic = `Deep Dive & Mock Practice (${reviewQ.category.replace('-', ' ').toUpperCase()})`;
+            d.objectives = [
+              `Re-evaluate key question ${reviewQ.id} under timed exam conditions`,
+              'Review flashcards and active recall concepts'
+            ];
             d.focus = `Deep Dive & Mock Practice (${reviewQ.category.replace('-', ' ').toUpperCase()})`;
             d.minutes = 45;
           } else {
+            d.topic = 'Comprehensive Review & Mock Interview Prep';
+            d.objectives = ['Timed mock interview practice', 'System architecture review'];
             d.focus = 'Comprehensive Review & Mock Interview Prep';
             d.minutes = 30;
           }
         } else {
+          d.topic = 'General Interview Readiness Review';
+          d.objectives = ['Review resume projects and fundamentals'];
           d.focus = 'General Interview Readiness Review';
           d.minutes = 30;
         }

@@ -145,10 +145,10 @@ export function ScheduleTimeline({ schedule, questions, kitId, kitData, onUpdate
                         </span>
                       )}
                     </div>
-                    <h4 className={`text-base font-normal font-sans uppercase tracking-tight ${
+                    <h4 className={`text-base font-bold font-sans uppercase tracking-tight ${
                       isCompleted ? 'line-through text-[#666666]' : 'text-[#0A0A0A]'
                     }`}>
-                      {day.focus}
+                      {day.topic || day.focus}
                     </h4>
                   </div>
 
@@ -172,24 +172,57 @@ export function ScheduleTimeline({ schedule, questions, kitId, kitData, onUpdate
                   </div>
                 </div>
 
+                {/* Day Topic Objectives */}
+                {day.objectives && day.objectives.length > 0 && (
+                  <div className="mb-4 p-3 bg-[#F9F9F4] border border-[#EBEBE5] rounded-lg">
+                    <div className="text-[10px] font-bold text-[#557700] uppercase mb-1.5 flex items-center gap-1 font-mono">
+                      <span>🎯</span>
+                      <span>KEY STUDY OBJECTIVES & CONCEPTS TO REVISE</span>
+                    </div>
+                    <ul className="space-y-1 text-xs font-sans text-[#333333]">
+                      {day.objectives.map((obj, oIdx) => (
+                        <li key={oIdx} className="flex items-start gap-1.5">
+                          <span className="text-[#88BB00] font-bold shrink-0">•</span>
+                          <span>{obj}</span>
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
+                )}
+
+                {/* Target Questions for Day */}
                 <div className="space-y-2">
-                  <div className="text-[10px] text-[#8A8A8A] uppercase mb-2">
-                    TARGET QUESTIONS ({dayQuestions.length})
+                  <div className="text-[10px] font-mono font-bold text-[#8A8A8A] uppercase mb-2 flex items-center justify-between">
+                    <span>MAPPED PRACTICE QUESTIONS ({dayQuestions.length})</span>
+                    <span className="text-[#666666]">Click to view details</span>
                   </div>
                   {dayQuestions.length > 0 ? (
                     dayQuestions.map(q => (
-                      <div key={q.id} className="p-2.5 bg-[#F7F7F3] border border-[#E5E5E0] flex items-start justify-between gap-3">
-                        <div className="flex items-start gap-2">
-                          <span className="font-bold text-[#0A0A0A] font-mono">{q.id}:</span>
-                          <span className="text-[#0A0A0A] font-sans text-xs">{q.prompt}</span>
+                      <div key={q.id} className="p-3 bg-[#F7F7F3] border border-[#E5E5E0] rounded-lg flex items-start justify-between gap-3 hover:border-[#0A0A0A] transition-colors">
+                        <div className="flex items-start gap-2.5 min-w-0">
+                          <span className="font-bold text-[#0A0A0A] font-mono text-xs shrink-0">{q.id}:</span>
+                          <div>
+                            <span className="text-[#0A0A0A] font-sans text-xs font-medium block leading-snug">{q.prompt}</span>
+                            {q.answer_outline && (
+                              <span className="text-[11px] text-[#666666] font-sans mt-1 line-clamp-2 block leading-normal">
+                                Key points: {q.answer_outline.substring(0, 140)}...
+                              </span>
+                            )}
+                          </div>
                         </div>
-                        <span className="bg-[#0A0A0A] text-white px-1.5 py-0.5 text-[9px] uppercase shrink-0">
+                        <span className={`px-2 py-0.5 text-[9px] font-mono font-bold uppercase shrink-0 border ${
+                          q.category === 'technical'
+                            ? 'bg-[#E8FF00]/40 text-[#0A0A0A] border-[#CCFF00]'
+                            : q.category === 'system-design'
+                            ? 'bg-[#0A0A0A] text-white border-black'
+                            : 'bg-white text-[#333333] border-[#CCCCCC]'
+                        }`}>
                           {q.category}
                         </span>
                       </div>
                     ))
                   ) : (
-                    <p className="text-xs text-[#8A8A8A] italic">Review & mock practice session</p>
+                    <p className="text-xs font-mono text-[#8A8A8A] italic">Review & mock practice session</p>
                   )}
                 </div>
               </div>

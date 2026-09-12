@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
-import { ArrowRight, Play, FileText, Target, Calendar, Zap, CheckCircle2, Check, ArrowUpRight, Clock, BarChart3 } from 'lucide-react';
+import { ArrowRight, Play, FileText, Target, Calendar, Zap, CheckCircle2, Check, ArrowUpRight, Clock, BarChart3, Scissors } from 'lucide-react';
 import { FaqSection } from '@/components/FaqSection';
 import { CtaBanner } from '@/components/CtaBanner';
 import { HowItWorksModal } from '@/components/HowItWorksModal';
@@ -25,6 +25,17 @@ const HERO_SAMPLE_ROLES = [
   'Data Scientist & AI Specialist',
   'DevOps & Systems Architect'
 ];
+
+function DashedCutDivider() {
+  return (
+    <div className="relative w-full max-w-[1360px] mx-auto py-6 flex items-center select-none pointer-events-none z-10">
+      <div className="w-full border-t-2 border-dashed border-[#D2D2CA]"></div>
+      <div className="absolute right-4 sm:right-8 bg-[#FBFBF8] px-2.5 py-1 flex items-center justify-center border border-[#E2E2DC] rounded-full shadow-2xs">
+        <Scissors className="w-4 h-4 text-[#333333] stroke-[2.2] rotate-180" />
+      </div>
+    </div>
+  );
+}
 
 export default function LandingPage() {
   // Animated Hero AI Execution Steps Loop State
@@ -134,7 +145,7 @@ export default function LandingPage() {
     <div className="min-h-screen bg-[#FBFBF8] bg-tech-grid text-[#0A0A0A] flex flex-col font-sans selection:bg-[#E8FF00] selection:text-black">
       
       {/* 01 HERO SECTION - 2 COLUMNS */}
-      <section className="relative py-12 lg:py-20 px-4 sm:px-6 lg:px-8 max-w-[1360px] mx-auto w-full border-b border-[#E8E8E2]">
+      <section className="relative py-12 lg:py-20 px-4 sm:px-6 lg:px-8 max-w-[1360px] mx-auto w-full">
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-12 lg:gap-8 items-center">
           
           {/* Left Hero Column */}
@@ -180,7 +191,7 @@ export default function LandingPage() {
             </div>
 
             {/* Startup Product Feature Highlights Row (Exact Reference Match) */}
-            <div className="pt-8 border-t border-[#E8E8E2] grid grid-cols-3 gap-4 sm:gap-6 max-w-xl font-sans">
+            <div className="pt-8 grid grid-cols-3 gap-4 sm:gap-6 max-w-xl font-sans">
               
               {/* Stat 1: 100% Autonomous Research */}
               <div className="border-r border-[#E8E8E2] pr-2 sm:pr-4 flex items-center gap-2.5 sm:gap-3">
@@ -403,8 +414,10 @@ export default function LandingPage() {
         </div>
       </section>
 
+      <DashedCutDivider />
+
       {/* 02 FEATURE CARDS ROW (4 COLUMNS) */}
-      <section className="py-16 px-4 sm:px-6 lg:px-8 max-w-[1360px] mx-auto w-full border-b border-[#E8E8E2]">
+      <section className="py-16 px-4 sm:px-6 lg:px-8 max-w-[1360px] mx-auto w-full">
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
           
           {/* Card 1 */}
@@ -522,8 +535,10 @@ export default function LandingPage() {
         </div>
       </section>
 
+      <DashedCutDivider />
+
       {/* 03 HOW IT WORKS WORKFLOW SECTION */}
-      <section className="py-20 px-4 sm:px-6 lg:px-8 max-w-[1360px] mx-auto w-full border-b border-[#E8E8E2]">
+      <section className="py-20 px-4 sm:px-6 lg:px-8 max-w-[1360px] mx-auto w-full">
         <div className="space-y-12">
           
           {/* Section Header */}
@@ -605,8 +620,10 @@ export default function LandingPage() {
         </div>
       </section>
 
+      <DashedCutDivider />
+
       {/* 04 SYSTEM CAPABILITIES MATRIX SECTION */}
-      <section className="py-20 px-4 sm:px-6 lg:px-8 max-w-[1360px] mx-auto w-full border-b border-[#E8E8E2]">
+      <section className="py-20 px-4 sm:px-6 lg:px-8 max-w-[1360px] mx-auto w-full">
         <div className="space-y-12">
           
           <div className="text-center max-w-3xl mx-auto space-y-4">
@@ -671,6 +688,8 @@ export default function LandingPage() {
           </div>
         </div>
       </section>
+
+      <DashedCutDivider />
 
       {/* 05 FAQ SECTION */}
       <FaqSection />

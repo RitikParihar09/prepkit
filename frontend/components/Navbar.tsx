@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { useAuth } from '@/lib/authContext';
@@ -10,12 +10,18 @@ export function Navbar() {
   const pathname = usePathname();
   const { user, logout } = useAuth();
   const [showLogoutConfirm, setShowLogoutConfirm] = useState(false);
+  const [isMounted, setIsMounted] = useState(false);
+
+  useEffect(() => {
+    setIsMounted(true);
+  }, []);
 
   // Hide top navigation bar during fullscreen practice mode
   if (pathname?.endsWith('/practice')) {
     return null;
   }
 
+  const isPreview = isMounted && pathname?.includes('/kits/new') && new URLSearchParams(window.location.search).get('preview') === 'true';
   const displayName = user?.name || (user?.email ? user.email.split('@')[0] : 'User');
 
   const handleLogout = () => {
@@ -36,9 +42,36 @@ export function Navbar() {
             </Link>
           </div>
 
+          {/* Middle Slot: Simulator Bar when ?preview=true or preview mode */}
+          {isPreview && (
+            <div className="hidden md:flex items-center gap-2 bg-[#0A0A0A] text-white px-3 py-1.5 rounded-full font-mono text-xs border border-[#222222] shadow-sm">
+              <div className="flex items-center gap-1.5 mr-1">
+                <span className="w-2 h-2 rounded-full bg-[#E8FF00] animate-ping" />
+                <span className="text-[#E8FF00] font-bold">SIMULATOR</span>
+              </div>
+              <span className="text-[#444444]">|</span>
+              <button
+                onClick={() => {
+                  window.dispatchEvent(new CustomEvent('toggle-sim-play'));
+                }}
+                className="bg-[#E8FF00] hover:bg-[#D4EA00] text-black px-2.5 py-0.5 rounded-full font-extrabold text-[11px] transition-all cursor-pointer"
+              >
+                PLAY / PAUSE
+              </button>
+              <button
+                onClick={() => {
+                  window.dispatchEvent(new CustomEvent('reset-sim-play'));
+                }}
+                className="bg-[#222222] hover:bg-[#333333] text-white px-2.5 py-0.5 rounded-full font-bold text-[11px] transition-all cursor-pointer border border-[#444444]"
+              >
+                ↺ RESTART
+              </button>
+            </div>
+          )}
+
           {/* Right CTA / User Info & Auth Controls */}
           <div className="flex items-center gap-3">
-            {user ? (
+            {isMounted && user ? (
               <div className="flex items-center gap-4">
                 <Link
                   href="/dashboard"
@@ -80,7 +113,7 @@ export function Navbar() {
                   </button>
                 </div>
               </div>
-            ) : (
+            ) : isMounted ? (
               <div className="flex items-center gap-3">
                 <Link
                   href="/login"
@@ -95,6 +128,8 @@ export function Navbar() {
                   Get started for free
                 </Link>
               </div>
+            ) : (
+              <div className="h-9 w-32" />
             )}
           </div>
         </div>
