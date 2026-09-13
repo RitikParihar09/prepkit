@@ -104,13 +104,12 @@ export default function KitDetailPage() {
         if (res.data && res.status === 'completed') {
           setKitData(res.data);
           setProgressPercent(100);
+          setIsGenerating(false);
           setLoading(false);
           if (interval) clearInterval(interval);
 
           if (wasGeneratingRef) {
             setShowSuccessModal(true);
-          } else {
-            setIsGenerating(false);
           }
         } else if (res.status === 'failed') {
           setError(res.error?.message || 'Kit generation failed.');
@@ -118,14 +117,13 @@ export default function KitDetailPage() {
           setLoading(false);
           if (interval) clearInterval(interval);
         } else {
-          // Still generating / processing
+          // Still generating / processing - set isGenerating BEFORE clearing loading to prevent glitch
           wasGeneratingRef = true;
           setIsGenerating(true);
           setLoading(false);
           if (typeof res.progressPercent === 'number') {
             setProgressPercent(res.progressPercent);
           } else {
-            // Simulated smooth progress increment while waiting for backend finish
             setProgressPercent(prev => Math.min(95, prev + 5));
           }
         }
