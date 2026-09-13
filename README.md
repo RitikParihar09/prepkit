@@ -4,6 +4,13 @@ An AI-powered, research-backed web application that turns any job description an
 
 ---
 
+### **Live Deployment & Access Links**
+- **Frontend App (Vercel)**: [https://prepkit-eight.vercel.app](https://prepkit-eight.vercel.app)
+- **Backend API (Render)**: [https://prepkit-backend-hakk.onrender.com](https://prepkit-backend-hakk.onrender.com)
+- **1-Click Demo Credentials**: `demo@example.com` / `Password123!` (or use Instant 1-Click Demo Login on the login screen)
+
+---
+
 ## 1. Tech Stack & LLM Integration
 
 - **Frontend**: Next.js 14 App Router, TypeScript, Tailwind CSS, Lucide React Icons (Modern SaaS aesthetic inspired by Linear and Notion).
