@@ -77,13 +77,15 @@ export default function KitDetailPage() {
   const [error, setError] = useState<string | null>(null);
   const [activeTab, setActiveTab] = useState<TabType>('overview');
 
-  // Generating status state
-  const [isGenerating, setIsGenerating] = useState(false);
+  // Generating status state - default isGenerating to true for smooth instant mounting
+  const [isGenerating, setIsGenerating] = useState(true);
   const [progressPercent, setProgressPercent] = useState(15);
   const [companyUrl, setCompanyUrl] = useState('');
   const [serverLogs, setServerLogs] = useState<{ text: string; time: string; url?: string }[]>([]);
   const [serverSources, setServerSources] = useState<{ name: string; url: string; status: string }[]>([]);
   const [showSuccessModal, setShowSuccessModal] = useState(false);
+  const [showCancelConfirm, setShowCancelConfirm] = useState(false);
+  const [cancelling, setCancelling] = useState(false);
 
   // Flashcard flip states for Flashcards tab
   const [flippedCards, setFlippedCards] = useState<Record<string, boolean>>({});
@@ -111,8 +113,8 @@ export default function KitDetailPage() {
           if (wasGeneratingRef) {
             setShowSuccessModal(true);
           }
-        } else if (res.status === 'failed') {
-          setError(res.error?.message || 'Kit generation failed.');
+        } else if (res.status === 'failed' || res.status === 'cancelled') {
+          setError(res.status === 'cancelled' ? 'Kit generation was cancelled.' : (res.error?.message || 'Kit generation failed.'));
           setIsGenerating(false);
           setLoading(false);
           if (interval) clearInterval(interval);
@@ -143,6 +145,20 @@ export default function KitDetailPage() {
       if (interval) clearInterval(interval);
     };
   }, [kitId]);
+
+  const handleConfirmCancel = async () => {
+    try {
+      setCancelling(true);
+      await api.cancelKit(kitId);
+      setShowCancelConfirm(false);
+      setIsGenerating(false);
+      router.push('/dashboard');
+    } catch (err: any) {
+      alert(err.message || 'Failed to cancel kit generation.');
+    } finally {
+      setCancelling(false);
+    }
+  };
 
   const handleSaveKit = async () => {
     if (!kitData) return;
@@ -512,10 +528,10 @@ export default function KitDetailPage() {
               </div>
 
               <button
-                onClick={() => router.push('/dashboard')}
-                className="w-full bg-white hover:bg-[#F4F4EE] text-[#0A0A0A] border border-[#D0D0CA] text-xs font-bold py-3 px-4 rounded-xl transition-all font-mono uppercase tracking-wider flex items-center justify-center gap-2 cursor-pointer"
+                onClick={() => setShowCancelConfirm(true)}
+                className="w-full bg-white hover:bg-red-50 text-red-600 border border-red-200 text-xs font-bold py-3 px-4 rounded-xl transition-all font-mono uppercase tracking-wider flex items-center justify-center gap-2 cursor-pointer shadow-xs"
               >
-                <div className="w-3 h-3 bg-[#0A0A0A] rounded-sm shrink-0" />
+                <div className="w-3 h-3 bg-red-600 rounded-sm shrink-0" />
                 Cancel Generation
               </button>
             </div>
@@ -790,6 +806,55 @@ export default function KitDetailPage() {
                 <span>Click to View Prep Kit</span>
                 <ArrowRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
               </button>
+
+            </div>
+          </div>
+        )}
+
+        {/* CANCEL CONFIRMATION MODAL POPUP */}
+        {showCancelConfirm && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-md animate-in fade-in duration-300">
+            <div className="bg-white border-2 border-black max-w-md w-full rounded-3xl p-6 sm:p-7 shadow-2xl space-y-5 relative text-left animate-in zoom-in-95 duration-200">
+              
+              <div className="flex items-center gap-3">
+                <div className="w-12 h-12 rounded-2xl bg-red-100 border border-red-200 text-red-600 flex items-center justify-center shrink-0">
+                  <AlertCircle className="w-6 h-6 stroke-[2.5]" />
+                </div>
+                <div>
+                  <div className="font-mono text-[10px] font-bold text-red-600 uppercase tracking-widest">[ CANCEL PIPELINE ]</div>
+                  <h3 className="text-xl font-extrabold text-[#0A0A0A] tracking-tight">Stop Kit Generation?</h3>
+                </div>
+              </div>
+
+              <p className="text-xs text-[#555555] leading-relaxed font-sans">
+                Are you sure you want to cancel the generation pipeline? The kit will be marked as <strong className="text-amber-800 uppercase font-mono">CANCELLED</strong> on your dashboard.
+              </p>
+
+              <div className="flex items-center justify-end gap-3 pt-2 font-mono text-xs">
+                <button
+                  type="button"
+                  onClick={() => setShowCancelConfirm(false)}
+                  disabled={cancelling}
+                  className="px-5 py-2.5 font-bold text-[#0A0A0A] bg-[#F4F4F0] hover:bg-[#EAEAEA] rounded-xl border border-[#E0E0DA] transition-all uppercase tracking-wider cursor-pointer"
+                >
+                  Keep Running
+                </button>
+                <button
+                  type="button"
+                  onClick={handleConfirmCancel}
+                  disabled={cancelling}
+                  className="px-5 py-2.5 font-bold text-white bg-red-600 hover:bg-red-700 rounded-xl shadow-md transition-all flex items-center gap-2 uppercase tracking-wider cursor-pointer"
+                >
+                  {cancelling ? (
+                    <>
+                      <Loader2 className="w-4 h-4 animate-spin" />
+                      <span>Cancelling...</span>
+                    </>
+                  ) : (
+                    <span>Yes, Cancel Pipeline</span>
+                  )}
+                </button>
+              </div>
 
             </div>
           </div>

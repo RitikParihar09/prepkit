@@ -97,6 +97,11 @@ export const api = {
       method: 'DELETE'
     }),
 
+  cancelKit: (id: string) =>
+    request(`/kits/${id}/cancel`, {
+      method: 'POST'
+    }),
+
   regenerateCategory: (id: string, category: string) =>
     request<{ status: string; data: any }>(`/kits/${id}/regenerate`, {
       method: 'POST',

@@ -18,6 +18,7 @@ export type KitGenerationStatus =
   | 'building_schedule'
   | 'validating'
   | 'completed'
+  | 'cancelled'
   | 'failed';
 
 // Sub-Schema Definitions for Modular & Strongly-Typed Kit Data Validation

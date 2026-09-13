@@ -316,7 +316,6 @@ export default function CreateKitPage() {
 
     try {
       setIsSubmitting(true);
-      setProgressPercent(15);
 
       const formattedCompanyUrl = companyUrl.startsWith('http://') || companyUrl.startsWith('https://') 
         ? companyUrl 
@@ -329,10 +328,8 @@ export default function CreateKitPage() {
         interviewNotes
       });
 
-      // Play laser line flow animation for 750ms to demonstrate energy pulse to step list before navigating
-      setTimeout(() => {
-        router.push(`/kits/${res.id}`);
-      }, 750);
+      // Navigate directly to the real kit page where live websocket/polling logs run seamlessly
+      router.push(`/kits/${res.id}`);
     } catch (err: any) {
       setError(err.message || 'Failed to start kit generation pipeline.');
       setIsSubmitting(false);

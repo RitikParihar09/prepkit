@@ -52,6 +52,9 @@ export class KitController {
         daysAvailable,
         interviewNotes,
         async (status, stepMessage, progressPercent, log, source) => {
+          const currentDoc = await KitModel.findById(kitDoc._id).select('status');
+          if (currentDoc?.status === 'cancelled') return;
+
           const updateObj: any = {
             status: status as any,
             stepMessage,
@@ -69,6 +72,9 @@ export class KitController {
         }
       )
         .then(async (kitData) => {
+          const currentDoc = await KitModel.findById(kitDoc._id).select('status');
+          if (currentDoc?.status === 'cancelled') return;
+
           await KitModel.findByIdAndUpdate(kitDoc._id, {
             status: 'completed',
             stepMessage: 'Kit generation complete!',
@@ -78,6 +84,9 @@ export class KitController {
           await saveKitSubModels(kitDoc._id, kitData);
         })
         .catch(async (err) => {
+          const currentDoc = await KitModel.findById(kitDoc._id).select('status');
+          if (currentDoc?.status === 'cancelled') return;
+
           await KitModel.findByIdAndUpdate(kitDoc._id, {
             status: 'failed',
             stepMessage: `Generation failed: ${err.message}`,
@@ -222,6 +231,27 @@ export class KitController {
       }
 
       return res.status(200).json({ status: 'ok', flashcards: kit.data.flashcards });
+    } catch (error: any) {
+      return res.status(500).json({ error: { code: 'SERVER_ERROR', message: error.message } });
+    }
+  }
+
+  static async cancelKitGeneration(req: AuthenticatedRequest, res: Response) {
+    try {
+      if (!req.user) return res.status(401).json({ error: { code: 'UNAUTHORIZED', message: 'Not authenticated' } });
+
+      const kit = await KitModel.findOne({ _id: req.params.id, userId: req.user.id });
+      if (!kit) {
+        return res.status(404).json({ error: { code: 'NOT_FOUND', message: 'Kit not found.' } });
+      }
+
+      kit.status = 'cancelled' as any;
+      kit.stepMessage = 'Generation cancelled by user.';
+      kit.progressPercent = 0;
+      kit.error = { code: 'CANCELLED', message: 'Kit generation was cancelled by user.' };
+      await kit.save();
+
+      return res.status(200).json({ status: 'ok', message: 'Generation cancelled.' });
     } catch (error: any) {
       return res.status(500).json({ error: { code: 'SERVER_ERROR', message: error.message } });
     }

@@ -403,11 +403,13 @@ export default function DashboardPage() {
                     <span className={`px-2.5 py-1 uppercase text-[10px] font-bold rounded border ${
                       kit.status === 'completed'
                         ? 'bg-[#0A0A0A] text-white border-[#0A0A0A]'
+                        : kit.status === 'cancelled'
+                        ? 'bg-amber-50 text-amber-800 border-amber-300'
                         : kit.status === 'failed'
                         ? 'bg-red-50 text-red-700 border-red-200'
                         : 'bg-[#E8FF00] text-black border-[#E8FF00] animate-pulse'
                     }`}>
-                      {kit.status === 'completed' ? 'READY' : kit.status === 'failed' ? 'FAILED' : 'PROCESSING'}
+                      {kit.status === 'completed' ? 'READY' : kit.status === 'cancelled' ? 'CANCELLED' : kit.status === 'failed' ? 'FAILED' : 'PROCESSING'}
                     </span>
 
                     {/* Schedule Completed Flag */}
