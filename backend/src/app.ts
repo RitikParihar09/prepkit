@@ -9,9 +9,16 @@ export const app = express();
 
 // Middleware
 app.use(cors({
-  origin: [config.frontendUrl, 'http://localhost:3000'],
+  origin: (origin, callback) => {
+    if (!origin || origin.endsWith('.vercel.app') || origin === 'http://localhost:3000' || origin === config.frontendUrl) {
+      callback(null, true);
+    } else {
+      callback(null, true);
+    }
+  },
   credentials: true
 }));
+app.options('*', cors());
 app.use(express.json({ limit: '10mb' }));
 
 // Health Check
