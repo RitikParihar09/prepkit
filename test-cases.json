@@ -1,0 +1,14 @@
+[
+  {
+    "id": "case-01",
+    "jd": "Senior Backend Engineer with 5+ years of Node.js, Express, MongoDB, and System Architecture experience. Responsible for building high-scale microservices, managing database performance, and mentoring junior engineers.",
+    "company_url": "https://stripe.com",
+    "days": 5
+  },
+  {
+    "id": "case-02",
+    "jd": "Frontend Developer. Must know React and CSS.",
+    "company_url": "http://localhost:8099/acme/",
+    "days": 3
+  }
+]
